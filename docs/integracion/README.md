@@ -39,3 +39,5 @@ Los campos obligatorios y sus tipos deben conservarse durante el MVP. Los cambio
 ## Implementación y siguiente integración
 
 El código, catálogo, pruebas, Dockerfile y configuración Vercel están en [backend](../../backend/README.md). Primero se valida la API local y luego el recorrido imagen → canvas → RGB → sonido con Santiago, Josué y Juan. Después se valida el despliegue conjunto en Vercel. Docker es el entorno compartido de desarrollo, no un cambio obligatorio de hosting.
+
+Para incorporar imágenes y sus metadatos, seguir la [guía de incorporación](AGREGAR-IMAGENES.md).

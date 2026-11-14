@@ -13,8 +13,10 @@ MAX_PIXELS = 25_000_000
 MAX_BYTES = 50 * 1024 * 1024
 
 
-def prepare_image(source: Path, output: Path, image_id: str) -> dict:
+def prepare_image(source: Path, output: Path, image_id: str, asset_number: int = 1) -> dict:
     """Acepta imágenes visuales de 8 bits. Datos científicos requieren preparación explícita."""
+    if asset_number < 1:
+        raise ValueError("El número de archivo debe ser positivo.")
     if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", image_id):
         raise ValueError("El id debe contener minúsculas, números y guiones.")
     if source.stat().st_size > MAX_BYTES:
@@ -35,20 +37,24 @@ def prepare_image(source: Path, output: Path, image_id: str) -> dict:
             background.alpha_composite(rgb)
             rgb = background.convert("RGB")
     folder = output / image_id
-    if folder.exists():
-        raise ValueError("Ya existe una imagen con ese id; use otro id.")
-    folder.mkdir(parents=True)
+    if folder.exists() and any(path.name != "metadata.json" for path in folder.iterdir()):
+        raise ValueError("La carpeta ya contiene archivos; use otro id.")
+    folder.mkdir(parents=True, exist_ok=True)
     preview_format = "jpg" if original_format == "jpg" else "png"
-    original = folder / f"original.{original_format}"
-    preview = folder / f"exploration.{preview_format}"
+    original = folder / f"original_{asset_number:03d}.{original_format}"
+    preview = folder / f"exploration_{asset_number:03d}.{preview_format}"
     try:
         shutil.copyfile(source, original)
         rgb.save(preview, format="JPEG" if preview_format == "jpg" else "PNG")
     except Exception:
-        shutil.rmtree(folder)
+        original.unlink(missing_ok=True)
+        preview.unlink(missing_ok=True)
+        if not any(folder.iterdir()):
+            folder.rmdir()
         raise
     return {
         "id": image_id,
+        "assetNumber": asset_number,
         "imageUrl": f"/api/images/{image_id}/file",
         "imageFormat": preview_format,
         "originalUrl": f"/api/images/{image_id}/original",

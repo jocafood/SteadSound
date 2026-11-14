@@ -51,13 +51,13 @@ Ejemplo disponible: `/api/images/blue-marble-2002`. Los archivos se sirven desde
 
 ## Incorporar imágenes
 
-Preparar un JSON con `id`, `title`, `description`, `altText`, `sourceUrl`, `credit` y `category`, según el [contrato](../docs/integracion/CONTRATO-DATOS.md). Luego ejecutar desde `backend/`:
+Crear `backend/data/images/{id}/metadata.json`. Puedes copiar `data/images/blue-marble-2002/metadata.json` y cambiar sus datos. La carpeta debe contener solo `metadata.json` antes de importar; el archivo de imagen de entrada se mantiene fuera de esa carpeta. No edites `catalog.json` a mano. El archivo debe contener `id`, `title`, `description`, `altText`, `sourceUrl`, `credit` y `category`, según el [contrato](../docs/integracion/CONTRATO-DATOS.md). Luego ejecutar desde `backend/`:
 
 ```bash
-python -m scripts.add_image /ruta/imagen.tif --metadata /ruta/metadatos.json
+python -m scripts.add_image /ruta/imagen.tif --metadata data/images/mi-imagen/metadata.json
 ```
 
-El comando valida los textos, prepara la versión de exploración, conserva el original y actualiza `data/catalog.json`. Usar identificadores nuevos; no ejecutar incorporaciones simultáneas. Revisar los archivos generados antes de subirlos al repositorio.
+El comando conserva los metadatos en la misma carpeta de la imagen, valida los textos, prepara la versión de exploración, conserva el original y actualiza `data/catalog.json`. Usar identificadores nuevos; no ejecutar incorporaciones simultáneas. Revisar los archivos generados antes de subirlos al repositorio.
 
 Se admiten PNG, JPG/JPEG y TIF/TIFF visuales de una página y 8 bits. Se aplican orientación y fondo negro a transparencias. TIF produce PNG; JPG produce una copia JPG recodificada. El original siempre conserva sus bytes. Límite inicial: 50 MiB y 25 millones de píxeles por imagen. Las imágenes científicas con múltiples páginas, bandas o profundidad superior requieren preparación explícita con Kata; el comando las rechaza en lugar de elegir una interpretación. Los originales grandes requieren almacenamiento externo en una etapa posterior.
 
@@ -84,3 +84,7 @@ El despliegue remoto aún debe validarse en la cuenta del equipo. Cuando se inte
 Stead: backend y datos. Santiago: interfaz y canvas. Kata: experiencia, textos y decisiones creativas. Josué y Juan: motor de sonificación.
 
 Ver [decisiones de integración](../docs/integracion/README.md) y [consideraciones del proyecto](../docs/CONSIDERACIONES-ACCION.md).
+
+Los archivos generados siguen `original_NNN.ext` y `exploration_NNN.ext`, dentro de `data/images/{id}/`. El número es compartido por ambas versiones, único en el catálogo y asignado automáticamente como el mayor existente más uno: `001`, `002`, etc. No se renumeran imágenes existentes. `assetNumber` registra ese número en el catálogo; las URLs públicas siguen usando el `id`.
+
+Guía paso a paso: [Agregar imágenes](../docs/integracion/AGREGAR-IMAGENES.md).

@@ -13,6 +13,7 @@
     "category": "earth",
     "width": 1024,
     "height": 1024,
-    "processingNotes": "Imagen visual de una página y 8 bits por canal; orientación aplicada, conversión a RGB y alfa compuesto sobre negro; sin reducción de dimensiones. Versión de exploración recodificada; original conservado sin cambios."
+    "processingNotes": "Imagen visual de una página y 8 bits por canal; orientación aplicada, conversión a RGB y alfa compuesto sobre negro; sin reducción de dimensiones. Versión de exploración recodificada; original conservado sin cambios.",
+    "assetNumber": 1
   }
 ]

@@ -29,7 +29,7 @@ def test_real_catalog_and_downloads(client):
         assert all(0 <= value <= 255 for value in image.getpixel((0, 0)))
     original = client.get(row['originalUrl'])
     assert 'attachment' in original.headers['content-disposition']
-    assert original.content == (DATA / 'images' / row['id'] / 'original.jpg').read_bytes()
+    assert original.content == (DATA / 'images' / row['id'] / f"original_{row['assetNumber']:03d}.jpg").read_bytes()
 
 
 @pytest.mark.parametrize('route', ['/api/images/missing', '/api/images/missing/file', '/api/images/missing/original'])
@@ -75,7 +75,7 @@ def test_transparency(tmp_path):
     source = tmp_path / 'alpha.png'
     Image.new('RGBA', (2, 2), (255, 0, 0, 0)).save(source)
     prepare_image(source, tmp_path / 'images', 'alpha')
-    with Image.open(tmp_path / 'images/alpha/exploration.png') as image:
+    with Image.open(tmp_path / 'images/alpha/exploration_001.png') as image:
         assert image.getpixel((0, 0)) == (0, 0, 0)
 
 
@@ -108,3 +108,35 @@ def test_internal_error_is_json(tmp_path):
     assert response.status_code == 500
     assert response.json()['error']['code'] == 'INTERNAL_ERROR'
     assert 'private details' not in response.text
+
+
+def test_numbered_files(tmp_path):
+    source = tmp_path / 'test.png'
+    Image.new('RGB', (2, 2)).save(source)
+    row = prepare_image(source, tmp_path / 'images', 'numbered', 12)
+    assert row['assetNumber'] == 12
+    assert (tmp_path / 'images/numbered/original_012.png').exists()
+    assert (tmp_path / 'images/numbered/exploration_012.png').exists()
+
+
+def test_import_keeps_metadata_with_images(tmp_path, monkeypatch):
+    from scripts import add_image
+    import sys
+    data = tmp_path / 'data'
+    folder = data / 'images' / 'new-image'
+    folder.mkdir(parents=True)
+    metadata = {'id': 'new-image', 'title': 'Prueba', 'description': 'Descripción', 'altText': 'Alternativo', 'sourceUrl': 'https://www.nasa.gov/', 'credit': 'Sintética', 'category': 'earth'}
+    metadata_path = folder / 'metadata.json'
+    metadata_path.write_text(json.dumps(metadata))
+    (data / 'catalog.json').write_text('[]')
+    source = tmp_path / 'source.png'
+    Image.new('RGB', (3, 2)).save(source)
+    monkeypatch.setattr(add_image, 'DATA', data)
+    from core.catalog import load_catalog
+    monkeypatch.setattr(add_image, 'load_catalog', lambda: load_catalog(data))
+    monkeypatch.setattr(sys, 'argv', ['add_image', str(source), '--metadata', str(metadata_path)])
+    add_image.main()
+    assert json.loads(metadata_path.read_text()) == metadata
+    assert (folder / 'original_001.png').exists()
+    assert (folder / 'exploration_001.png').exists()
+    assert load_catalog(data)['new-image'].assetNumber == 1

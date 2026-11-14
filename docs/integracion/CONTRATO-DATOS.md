@@ -16,6 +16,7 @@ Estado: backend inicial implementado con catálogo local y rutas de exploración
 | Campo | Tipo | Significado |
 | --- | --- | --- |
 | `id` | string | Identificador estable, por ejemplo `earth-demo-01`. |
+| `assetNumber` | integer | Número positivo único asignado por el importador para los archivos `original_NNN.ext` y `exploration_NNN.ext`. Las URLs siguen usando `id`. |
 | `title` | string | Título visible. |
 | `description` | string | Explicación accesible de lo que muestra la imagen y su contexto. |
 | `altText` | string | Texto alternativo breve para el elemento de imagen. |
@@ -59,6 +60,7 @@ La preparación produce RGB de 8 bits por canal, con orientación aplicada y sin
   "images": [
     {
       "id": "earth-demo-01",
+      "assetNumber": 1,
       "title": "Imagen terrestre de ejemplo",
       "description": "Descripción pendiente de completar con la imagen elegida y su fuente.",
       "altText": "Imagen terrestre de demostración.",

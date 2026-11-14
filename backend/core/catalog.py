@@ -14,6 +14,7 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 class ImageRecord(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+    assetNumber: int = Field(gt=0)
     title: str = Field(min_length=1)
     description: str = Field(min_length=1)
     altText: str = Field(min_length=1)
@@ -41,6 +42,8 @@ def load_catalog(data: Path = DATA) -> dict[str, ImageRecord]:
     records = [ImageRecord.model_validate(row) for row in json.loads((data / "catalog.json").read_text())]
     if len({row.id for row in records}) != len(records):
         raise ValueError("Identificadores duplicados en el catálogo.")
+    if len({row.assetNumber for row in records}) != len(records):
+        raise ValueError("Números de archivo duplicados en el catálogo.")
     for row in records:
         for original in (False, True):
             path = image_path(data, row, original)
@@ -55,5 +58,5 @@ def load_catalog(data: Path = DATA) -> dict[str, ImageRecord]:
 
 
 def image_path(data: Path, row: ImageRecord, original: bool) -> Path:
-    name = f"original.{row.originalFormat}" if original else f"exploration.{row.imageFormat}"
+    name = f"original_{row.assetNumber:03d}.{row.originalFormat}" if original else f"exploration_{row.assetNumber:03d}.{row.imageFormat}"
     return data / "images" / row.id / name
