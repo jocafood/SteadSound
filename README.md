@@ -24,11 +24,7 @@ image into sound in real time.
 2.  **Pixel interaction:** As the user moves the cursor over the image,
     SteadSound reads the data associated with the pixel beneath.
 3.  **Sound generation:** The application maps image properties---such
-<<<<<<< HEAD
     as the RGB code obtained---to audio parameters, generating
-=======
-    as the RGB color obtained---to audio parameters, generating
->>>>>>> ed8b6a1c3c8063874ee155e45c9d628e4f46f73e
     a sound that changes as the cursor moves.
 4.  **Listening and discovery:** Users can listen to the resulting
     sounds and explore the image in a different way.
