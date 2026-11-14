@@ -61,6 +61,17 @@ El comando conserva los metadatos en la misma carpeta de la imagen, valida los t
 
 Se admiten PNG, JPG/JPEG y TIF/TIFF visuales de una página y 8 bits. Se aplican orientación y fondo negro a transparencias. TIF produce PNG; JPG produce una copia JPG recodificada. El original siempre conserva sus bytes. Límite inicial: 50 MiB y 25 millones de píxeles por imagen. Las imágenes científicas con múltiples páginas, bandas o profundidad superior requieren preparación explícita con Kata; el comando las rechaza en lugar de elegir una interpretación. Los originales grandes requieren almacenamiento externo en una etapa posterior.
 
+## Revisar y actualizar metadatos
+
+Después de editar los textos en `data/images/{id}/metadata.json`, ejecutar desde `backend/`:
+
+```bash
+python -m scripts.sync_metadata
+python -m scripts.verify_catalog
+```
+
+No cambiar el ID de imágenes publicadas. La sincronización conserva los campos técnicos y los archivos. Reconstruir Docker después de modificar el catálogo para que la API publique los nuevos textos.
+
 ## Pruebas
 
 ```bash

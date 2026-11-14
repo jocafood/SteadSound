@@ -140,3 +140,50 @@ def test_import_keeps_metadata_with_images(tmp_path, monkeypatch):
     assert (folder / 'original_001.png').exists()
     assert (folder / 'exploration_001.png').exists()
     assert load_catalog(data)['new-image'].assetNumber == 1
+
+
+def test_complete_catalog_integrity():
+    from scripts.verify_catalog import verify_catalog
+    assert verify_catalog() == len(json.loads((DATA / 'catalog.json').read_text()))
+
+
+def test_all_catalog_routes(client):
+    for row in client.get('/api/images').json()['images']:
+        assert client.get('/api/images/' + row['id']).json() == {'image': row}
+        preview = client.get(row['imageUrl'])
+        assert preview.status_code == 200
+        with Image.open(BytesIO(preview.content)) as image:
+            assert image.size == (row['width'], row['height'])
+            assert image.mode == 'RGB'
+        original = client.get(row['originalUrl'])
+        assert original.status_code == 200
+        assert original.content == (DATA / 'images' / row['id'] / f"original_{row['assetNumber']:03d}.{row['originalFormat']}").read_bytes()
+
+
+def test_sync_metadata_is_atomic_and_preserves_assets(tmp_path):
+    import shutil
+    from scripts.sync_metadata import sync_metadata
+    from scripts.verify_catalog import verify_catalog
+    data = tmp_path / 'data'
+    shutil.copytree(DATA, data)
+    rows = json.loads((data / 'catalog.json').read_text())
+    folder = data / 'images' / rows[0]['id']
+    assets = {p.name: p.read_bytes() for p in folder.iterdir() if p.suffix != '.json'}
+    metadata_path = folder / 'metadata.json'
+    metadata = json.loads(metadata_path.read_text())
+    metadata['title'] = 'Título revisado por Kata'
+    metadata_path.write_text(json.dumps(metadata))
+    with pytest.raises(ValueError, match='difieren'):
+        verify_catalog(data)
+    sync_metadata(data)
+    updated = json.loads((data / 'catalog.json').read_text())
+    assert updated[0]['title'] == metadata['title']
+    assert updated[0]['assetNumber'] == rows[0]['assetNumber']
+    assert all((folder / name).read_bytes() == content for name, content in assets.items())
+    verify_catalog(data)
+    before = (data / 'catalog.json').read_bytes()
+    metadata['id'] = 'wrong-id'
+    metadata_path.write_text(json.dumps(metadata))
+    with pytest.raises(ValueError, match='no coincide'):
+        sync_metadata(data)
+    assert (data / 'catalog.json').read_bytes() == before

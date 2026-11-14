@@ -59,7 +59,14 @@ Si todavía no se preparó el entorno, seguir las instrucciones del [README del 
 
 El importador genera `original_NNN.ext` y `exploration_NNN.ext`, conserva `metadata.json` en la misma carpeta y añade el registro a `data/catalog.json`. Asigna el siguiente número disponible después del mayor del catálogo: `001`, `002`, etc. Ambas versiones comparten número. No se renumeran las imágenes existentes ni se reemplaza un ID ya publicado. No ejecutar importaciones simultáneas.
 
-Si el ID ya existe, no borrar sus archivos para volver a importar. La edición de textos de una imagen publicada todavía no tiene un comando dedicado: actualizar `metadata.json` y los mismos campos de texto de su registro en `catalog.json`, conservando ID y campos técnicos, y ejecutar las pruebas.
+Si el ID ya existe, no borrar sus archivos para volver a importar. Para editar los textos de una imagen publicada, modificar únicamente su `metadata.json`, manteniendo el mismo `id`, y ejecutar desde `backend/`:
+
+```bash
+python -m scripts.sync_metadata
+python -m scripts.verify_catalog
+```
+
+El primer comando valida todos los metadatos y actualiza el catálogo solo si son válidos. Conserva números, rutas, formatos, dimensiones e imágenes. El segundo comprueba los archivos, las carpetas y que los textos coinciden con el índice. Una carpeta preparada pero todavía sin importar será reportada como fuera del catálogo: completar su importación antes de verificar.
 
 ## 4. Reconstruir y verificar
 

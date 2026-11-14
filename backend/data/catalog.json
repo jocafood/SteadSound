@@ -1,6 +1,7 @@
 [
   {
     "id": "blue-marble-2002",
+    "assetNumber": 1,
     "title": "Blue Marble 2002: hemisferio occidental",
     "description": "Vista del globo terrestre con América en el centro, océanos azules y nubes blancas sobre un fondo negro. Es una composición de datos en color natural del instrumento MODIS del satélite Terra recogidos durante cuatro meses, según NASA. Permite explorar los contrastes de color entre océano, tierra, nubes y fondo.",
     "altText": "Globo terrestre con América, océanos azules y nubes blancas sobre fondo negro.",
@@ -13,8 +14,7 @@
     "category": "earth",
     "width": 1024,
     "height": 1024,
-    "processingNotes": "Imagen visual de una página y 8 bits por canal; orientación aplicada, conversión a RGB y alfa compuesto sobre negro; sin reducción de dimensiones. Versión de exploración recodificada; original conservado sin cambios.",
-    "assetNumber": 1
+    "processingNotes": "Imagen visual de una página y 8 bits por canal; orientación aplicada, conversión a RGB y alfa compuesto sobre negro; sin reducción de dimensiones. Versión de exploración recodificada; original conservado sin cambios."
   },
   {
     "id": "hubble-cats-head",
