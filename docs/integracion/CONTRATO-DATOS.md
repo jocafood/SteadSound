@@ -1,6 +1,6 @@
 # Contrato de datos del MVP
 
-Estado: propuesta inicial, previa a la implementación. Los identificadores, textos y URLs de los ejemplos son ilustrativos; no constituyen un catálogo NASA verificado.
+Estado: backend inicial implementado con catálogo local y rutas de exploración y descarga. El contrato con el motor de audio sigue pendiente de integración. Los identificadores, textos y URLs de los ejemplos son ilustrativos; no constituyen un catálogo NASA verificado.
 
 ## Convenciones
 
@@ -91,7 +91,7 @@ El navegador solicita directamente `imageUrl`. La respuesta contiene bytes de im
 
 Si la fuente externa permite CORS, se puede utilizar su URL y establecer `crossOrigin = "anonymous"` antes de asignar `src` en el navegador. La lectura del canvas debe probarse con el archivo real.
 
-Si se necesita servir el archivo desde la API, se usará `GET /api/images/{id}/file`. Esta ruta resolverá únicamente identificadores del catálogo con destinos previamente validados; no aceptará una URL arbitraria del cliente. Solo se implementará si resulta necesaria para la imagen elegida. En ese caso, `imageUrl` apuntará a esta ruta y sus errores seguirán el formato JSON común.
+Si se necesita servir el archivo desde la API, se usará `GET /api/images/{id}/file`. Esta ruta resolverá únicamente identificadores del catálogo con destinos previamente validados; no aceptará una URL arbitraria del cliente. Esta ruta está implementada para los archivos locales del catálogo. `imageUrl` apunta a ella y sus errores siguen el formato JSON común.
 
 Cuando el proyecto sirva el original, usará `GET /api/images/{id}/original`, con el MIME de la tabla y `Content-Disposition: attachment` con un nombre de archivo y extensión correspondientes. Esta ruta entrega el original sin convertirlo; `GET /api/images/{id}/file` entrega la versión de exploración. Ambas resuelven únicamente identificadores del catálogo. `originalUrl` también puede ser un enlace HTTPS directo al archivo de origen.
 
@@ -153,7 +153,10 @@ El MVP empieza con un píxel por interacción. Promediar una región, reproducir
 4. Un toque en cada esquina produce coordenadas válidas dentro de las dimensiones de la imagen.
 5. El motor recibe RGB en el rango acordado y puede reproducir sonido después de la interacción que habilita el audio del navegador.
 6. La interfaz presenta el título, el texto alternativo, la descripción y el crédito de la imagen.
-
 7. Se comprueba al menos un archivo de cada formato de origen: PNG, JPG y TIF. El TIF se explora mediante su PNG preparado.
 8. `imageFormat` y `originalFormat` coinciden con los archivos y MIME entregados; el original descargado conserva sus bytes.
 9. Las transformaciones quedan descritas en `processingNotes` y el RGB que recibe el motor corresponde a la versión de exploración.
+
+## Alcance de la implementación inicial
+
+El catálogo actual usa archivos locales y URLs relativas para exploración y descarga. `processingNotes` es obligatorio en este backend porque todas las versiones se preparan y recodifican. No hay consultas externas durante las peticiones, por lo que los errores 502 y 504 quedan reservados para futuras fuentes remotas. Los archivos se validan al cargar la aplicación; un catálogo inválido impide el arranque. El preparador admite imágenes visuales de una página y 8 bits y rechaza TIFF científicos que necesiten decisiones explícitas sobre bandas, páginas o normalización.

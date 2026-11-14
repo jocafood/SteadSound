@@ -1,12 +1,12 @@
 # Integración de SteadSound
 
-Este directorio define el contrato inicial entre la API de Stead, la interfaz de Santiago, la experiencia de Kata y el motor de sonido de Josué y Juan. Es una propuesta para implementar el MVP; todavía no existen estas rutas ni módulos.
+Este directorio define el contrato inicial entre la API de Stead, la interfaz de Santiago, la experiencia de Kata y el motor de sonido de Josué y Juan. Las rutas del backend ya están implementadas para un catálogo local curado. La interfaz y el motor de sonido quedan pendientes de integración.
 
 ## Decisiones iniciales
 
 | Tema | Decisión |
 | --- | --- |
-| Despliegue | Web y funciones Python en Vercel, bajo el mismo dominio. |
+| Despliegue | Backend aislado en `backend/`, ejecutable con Docker Compose. Vercel sigue como destino previsto; la configuración conjunta con la web queda pendiente. |
 | Intercambio con la API | HTTP con JSON UTF-8 y campos en `camelCase`. |
 | Imágenes | La API devuelve metadatos y una URL; el archivo se descarga por separado. No se envían imágenes en base64 dentro del JSON. |
 | Formatos de origen | PNG, JPG/JPEG y TIF/TIFF. El contrato los identifica como `png`, `jpg` y `tif`. |
@@ -16,7 +16,7 @@ Este directorio define el contrato inicial entre la API de Stead, la interfaz de
 | Lectura de píxeles | Se realiza en el canvas del navegador, sobre la imagen disponible para exploración. |
 | Generación de audio | Se realiza en el navegador con Tone.js. No requiere una llamada a la API por cada toque. |
 | Accesibilidad | Cada imagen incluye texto alternativo y una descripción más extensa preparados con Kata. |
-| Acceso a píxeles | Usar una imagen del mismo dominio o una fuente con CORS compatible. Si hace falta, Stead implementará una ruta de imagen. |
+| Acceso a píxeles | Usar una imagen del mismo dominio o una fuente con CORS compatible. El backend implementa rutas para la versión de exploración y el original, servidas desde el mismo dominio. |
 
 El detalle y los ejemplos están en [CONTRATO-DATOS.md](CONTRATO-DATOS.md).
 
@@ -35,3 +35,7 @@ El detalle y los ejemplos están en [CONTRATO-DATOS.md](CONTRATO-DATOS.md).
 4. Kata y el equipo prueban las instrucciones, la descripción y el resultado sonoro.
 
 Los campos obligatorios y sus tipos deben conservarse durante el MVP. Los cambios incompatibles se documentan aquí y se coordinan con quienes consumen los datos antes de implementarlos. Se pueden añadir campos opcionales sin eliminar ni cambiar los existentes.
+
+## Implementación y siguiente integración
+
+El código, catálogo, pruebas, Dockerfile y configuración Vercel están en [backend](../../backend/README.md). Primero se valida la API local y luego el recorrido imagen → canvas → RGB → sonido con Santiago, Josué y Juan. Después se valida el despliegue conjunto en Vercel. Docker es el entorno compartido de desarrollo, no un cambio obligatorio de hosting.
