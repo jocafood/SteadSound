@@ -1,0 +1,21 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SteadSound</title>
+</head>
+<body>
+
+    <button id="sonidoButton">Reproducir sonido</button>
+
+    <script type="module">
+        import { reproducirSonido } from "./sound.js";
+
+        document.getElementById("sonidoButton").addEventListener("click", async () => {
+            await reproducirSonido();
+        });
+    </script>
+
+</body>
+</html>
