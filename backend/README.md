@@ -88,3 +88,5 @@ Ver [decisiones de integración](../docs/integracion/README.md) y [consideracion
 Los archivos generados siguen `original_NNN.ext` y `exploration_NNN.ext`, dentro de `data/images/{id}/`. El número es compartido por ambas versiones, único en el catálogo y asignado automáticamente como el mayor existente más uno: `001`, `002`, etc. No se renumeran imágenes existentes. `assetNumber` registra ese número en el catálogo; las URLs públicas siguen usando el `id`.
 
 Guía paso a paso: [Agregar imágenes](../docs/integracion/AGREGAR-IMAGENES.md).
+
+El catálogo también incluye las 19 imágenes entregadas en `Hacka/`. Consultar la [correspondencia de archivos, IDs y fuentes](../docs/integracion/CATALOGO-HACKA.md).
