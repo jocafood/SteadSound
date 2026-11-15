@@ -135,3 +135,5 @@ SteadSound busca crear un puente entre la astronomía, la tecnología y el
 sonido. Al convertir los datos de una imagen en una experiencia audible,
 el proyecto invita a descubrir los detalles de las imágenes astronómicas
 no solo con la vista, sino también con el oído.
+
+Para desarrollar la interfaz definitiva: [contrato completo para la UI](docs/integracion/CONTRATO-UI.md).

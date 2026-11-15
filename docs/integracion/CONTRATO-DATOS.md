@@ -1,5 +1,7 @@
 # Contrato de datos del MVP
 
+> Para implementar la UI definitiva, consultar el [contrato completo de integración UI](CONTRATO-UI.md), que consolida API, sonido, Vercel y sustitución del mockup.
+
 Estado: backend inicial implementado con catálogo local y rutas de exploración y descarga. La conexión con el motor y una UI sencilla está implementada; ver [UI-SONIDO.md](UI-SONIDO.md). Los identificadores, textos y URLs de los ejemplos son ilustrativos; no constituyen un catálogo NASA verificado.
 
 ## Convenciones

@@ -1,5 +1,7 @@
 # Conexión UI, backend y motor de sonido
 
+> Para implementar la UI definitiva, consultar el [contrato completo de integración UI](CONTRATO-UI.md), que consolida API, sonido, Vercel y sustitución del mockup.
+
 La interfaz sencilla en `index.html` y `frontend/main.js` prueba el catálogo y el sonido reales. Santiago puede sustituir el HTML y el CSS usando los módulos de conexión existentes.
 
 ## Ejecutar todo con Docker
