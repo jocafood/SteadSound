@@ -104,7 +104,7 @@ Las rutas de importación son desde la raíz; ajustarlas a la ubicación del com
 | `point(clientX, clientY)` | Lee y reproduce el punto de pantalla; devuelve muestra o `null` si no hay imagen o el punto está fuera. |
 | `sample(x,y)` | Coordenadas enteras de la imagen; devuelve muestra o `null` sin imagen. Fuera de límites lanza error. |
 | `move(dx,dy)` | Desplaza la posición interna limitándola al área de imagen y reproduce la muestra. |
-| `orchestra()` | Promesa de interpretación de cuatro segundos. Requiere imagen y audio ya activo. |
+| `orchestra()` | Promesa de barrido de arriba hacia abajo; duración aproximada de 4–10 segundos según tempo y altura. Requiere imagen y audio ya activo. |
 | `dispose()` | Invalida cargas pendientes, descarta la imagen y detiene audio. La UI debe retirar sus propios listeners. |
 | `image` | Registro cargado o `null`. No usar mientras la nueva imagen está cargando. |
 | `rhythm` | Estadística global después de `imagechange`; puede ser `null` en perfiles anteriores. No usar el valor anterior durante la carga. |
@@ -116,6 +116,7 @@ Registrar listeners antes de llamar `load`:
 | Evento | `event.detail` |
 | --- | --- |
 | `imagechange` | Registro de imagen listo para explorar. Actualizar título, descripción, crédito, fuente y `aria-label` del canvas. |
+| `scanprogress` | `{ yStart, yEnd, height, index, total, progress, duration }`; filas base cero, `yEnd` exclusivo y progreso 0–1. La UI puede dibujar una línea de escaneo sin modificar el canvas. |
 | `sample` | `{ sample, sound }`. `sound` es `null` con audio inactivo; en otro caso incluye frecuencia, familia, volumen, BPM y si se disparó una nota inmediatamente. |
 | `status` | Cadena legible para mostrar en `role="status"` / `aria-live="polite"`. No interpretar esa cadena como estado de máquina. |
 
@@ -145,7 +146,7 @@ El canvas debe mantener la proporción natural, sin padding ni bordes propios. P
 | `audioActivo()` | Booleano del estado del motor, no permiso permanente del navegador. |
 | `configurarInstrumentos(ids)` | Array no vacío de IDs válidos. Deduplica y **detiene el audio**; después volver a activarlo. |
 | `configurarImagen(samples)` | Calcula estadísticas globales. La llama `explorer.load` automáticamente. Con integración directa, llamar antes de activar audio. |
-| `reproducirOrquesta(samples)` | Promesa `{reason, notes, duration, instruments?}`. `reason`: `finished`, `cancelled`, `silent`. Duración nominal cuatro segundos; silencio: cero. Audio debe estar activo. |
+| `reproducirOrquesta(samples)` | Promesa `{reason, notes, duration, instruments?}`. `reason`: `finished`, `cancelled`, `silent`. En el perfil actual la duración depende del número de bandas y el tempo; los perfiles de rollback mantienen su comportamiento anterior. Audio debe estar activo. |
 | `mantenerExploracion()` | Mantiene la repetición del último píxel hasta que se pause o detenga. Usar después de leer un punto válido durante una presión. |
 | `pausarExploracion()` | Deja de iniciar notas del píxel; permite extinguir la nota actual. No cancela la orquesta: para eso usar `detenerAudio()`. |
 | `SOUND_PROFILE`, `admiteInstrumentos` | Perfil incorporado al build y capacidad de instrumentos/orquesta. |
@@ -156,7 +157,7 @@ Instrumentos actuales: `piano`, `violin`, `flute`, `bell`, `guitar`. Son síntes
 
 El controlador toma 1536 muestras globales, incluyendo negros. Calcula luminancia media relativa sRGB y aplica `BPM = round(48 + 96 * sqrt(luminanciaMedia))`; intervalo `60/BPM` segundos. La saturación cambia el timbre, no el BPM. `rhythm` contiene `luminance`, `vibrance`, `energy`, `bpm`, `noteInterval`.
 
-Mantener un punto repite notas al tempo global; una muestra de teclado produce una frase corta acotada. La orquesta toma 96 muestras de toda la imagen, selecciona hasta cinco grupos de altura/familia y repite ese conjunto simultáneo durante cuatro segundos. No intenta disparar todos los píxeles. Hasta cinco instrumentos y los power chords de guitarra permiten un máximo de 35 voces iniciales por pulsación orquestal. Se suspenden notas individuales mientras suena la orquesta.
+Mantener un punto repite notas al tempo global; una muestra de teclado produce una frase corta acotada. El escáner lee todos los píxeles y agrupa filas consecutivas en hasta 32 bandas horizontales. Cada banda elige hasta cinco grupos de altura/familia. Las bandas suenan de arriba hacia abajo, incluyendo el tiempo de las bandas negras como silencio. No se disparan millones de voces independientes. Hasta cinco instrumentos y los power chords de guitarra permiten un máximo de 35 voces iniciales por pulsación orquestal. Se suspenden notas individuales mientras suena la orquesta.
 
 ## 7. Ciclo de vida para los controles de la UI
 
@@ -291,8 +292,10 @@ Antes de integrar o publicar, comprobar:
 - Sin autoplay al cargar o activar; tocar, mantener y soltar; teclado y foco visible.
 - Cada instrumento, mezcla válida, negros silenciosos y timbres diferenciados por color.
 - Imágenes claras y oscuras producen distinta velocidad instrumental. Los BPM son globales y no cambian al mover el cursor.
-- Orquesta de cuatro segundos; cancelar durante activación, interpretación y cambio de imagen; sin notas nuevas después de detener o desmontar.
+- Barrido de arriba hacia abajo con progreso; cancelar durante activación, interpretación y cambio de imagen; sin notas nuevas después de detener o desmontar.
 - Sin audio residual al ocultar pestaña; sin listeners duplicados en remount/desarrollo.
 - En Vercel: JSON, canvas y descargas a través del dominio UI; sin bloqueos de autenticación, CORS ni fallback HTML sobre `/api`.
 
 Otros documentos: [contrato de datos](CONTRATO-DATOS.md), [historial y funcionamiento del sonido](UI-SONIDO.md), [agregar imágenes](AGREGAR-IMAGENES.md), [correspondencias del catálogo](CATALOGO-HACKA.md).
+
+La llamada pública `explorer.orchestra()` se conserva para compatibilidad, pero en `ensemble` ahora ejecuta el escáner. `audio/scanner.js` genera el plan con todos los píxeles. Para recuperar la orquesta simultánea de la entrega previa: `VITE_SOUND_PROFILE=ensemble-static docker compose up --build -d web`.

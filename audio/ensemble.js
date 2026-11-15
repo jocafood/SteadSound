@@ -108,23 +108,35 @@ export function reproducirSonido(sample) {
   if (played) { graph.play(parameters, now); lastAttack = now; previous = { midi: parameters.midi, family: parameters.family }; }
   return { ...parameters, played, instruments: [...instruments], profile: 'ensemble', bpm: rhythm.bpm };
 }
-export function reproducirOrquesta(samples) {
+export function reproducirOrquesta(input, onProgress = () => {}) {
   if (!enabled) throw new Error('Activa el audio antes de interpretar la imagen.');
   finishOrchestra?.('cancelled');
-  const notes = imageChord(samples, 5, pixelToDynamic);
-  if (!notes.length) return Promise.resolve({ reason: 'silent', notes: 0, duration: 0 });
-  const now = Tone.now();
-  activeNote = null; orchestraNotes = notes; lastAttack = now;
-  notes.forEach(note => graph.play(note, now, rhythm.noteInterval * 0.65, notes.length));
+  // Array de muestras sigue admitido para consumidores anteriores.
+  const rows = input.rows ?? [{ yStart: 0, yEnd: 1, notes: imageChord(input, 5, pixelToDynamic) }];
+  const height = input.height ?? 1;
+  const interval = Math.max(0.12, Math.min(0.32, rhythm.noteInterval / 4));
+  activeNote = null; orchestraNotes = null;
+  let index = 0;
+  const totalNotes = rows.reduce((sum, row) => sum + row.notes.length, 0);
   return new Promise(resolve => {
-    const timer = setTimeout(() => finish('finished'), 4000);
+    let timer;
     const finish = reason => {
       clearTimeout(timer); finishOrchestra = undefined;
       activeNote = null; orchestraNotes = null;
       graph?.stop(); enabled = false; previous = null;
-      resolve({ reason, notes: notes.length, instruments: [...instruments], duration: 4 });
+      resolve({ reason: reason === 'finished' && !totalNotes ? 'silent' : reason, notes: totalNotes, duration: rows.length * interval, rows: rows.length });
     };
     finishOrchestra = finish;
+    const advance = () => {
+      if (index === rows.length) { finish('finished'); return; }
+      const row = rows[index];
+      const now = Tone.now();
+      row.notes.forEach(note => graph.play(note, now, interval * 0.7, row.notes.length));
+      index++;
+      onProgress({ yStart: row.yStart, yEnd: row.yEnd, height, index, total: rows.length, progress: row.yEnd / height, duration: rows.length * interval });
+      timer = setTimeout(advance, interval * 1000);
+    };
+    advance();
   });
 }
 export function detenerAudio() {

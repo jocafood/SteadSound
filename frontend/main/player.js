@@ -15,12 +15,26 @@ const canvas = $('player-canvas');
 const explorer = new ImageSoundExplorer(canvas);
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
-const guitarSupported = SOUND_PROFILE === 'ensemble' || SOUND_PROFILE === 'ensemble-percussion';
+const guitarSupported = SOUND_PROFILE === 'ensemble-static' || SOUND_PROFILE === 'ensemble' || SOUND_PROFILE === 'ensemble-percussion';
 
 let isOpen = false;
 let current = null;
 let pointerId = null;
-let orchestraToken = 0;
+let orchestraToken = 0, scanning = false;
+const scanLine = document.createElement('div');
+scanLine.className = 'player-scan-line';
+scanLine.hidden = true;
+scanLine.setAttribute('aria-hidden', 'true');
+root.append(scanLine);
+explorer.addEventListener('scanprogress', ({ detail: row }) => {
+  if (!scanning) return;
+  const rect = canvas.getBoundingClientRect();
+  scanLine.hidden = false;
+  scanLine.style.left = `${rect.left}px`;
+  scanLine.style.width = `${rect.width}px`;
+  scanLine.style.top = `${rect.top + row.progress * rect.height}px`;
+  setStatus(`Scanning rows ${row.yStart + 1}–${row.yEnd} of ${row.height} · ${Math.round(row.progress * 100)}%`);
+});
 let clipAnimation = null;
 let lastFocus = null;
 
@@ -92,11 +106,11 @@ function syncControls() {
   button.textContent = on ? 'Stop sound' : 'Enable sound';
   button.setAttribute('aria-pressed', String(on));
   button.classList.toggle('is-on', on);
-  $('player-orchestra').disabled = !current;
+  $('player-orchestra').disabled = !current || !explorer.image || scanning;
 }
 
 function stopPlayback() {
-  orchestraToken++;
+  orchestraToken++; scanning = false; scanLine.hidden = true;
   explorer.stop();
   syncControls();
 }
@@ -117,21 +131,24 @@ async function toggleAudio() {
 }
 
 async function playWhole() {
+  if (scanning) return;
   const token = ++orchestraToken;
+  scanning = true; syncControls();
   try {
     if (!audioActivo()) await explorer.start();
     if (token !== orchestraToken || !audioActivo()) return;
-    setStatus('Playing a 4-second snapshot of the whole image…');
+    setStatus('Scanning the image from top to bottom…');
+    syncControls();
     const result = await explorer.orchestra();
     if (token === orchestraToken) {
       setStatus(result.reason === 'silent'
         ? 'This image is too dark to sound.'
-        : 'Snapshot finished. Drag over the image to keep exploring.');
+        : 'Scan finished. Enable sound to keep exploring.');
     }
   } catch {
     if (token === orchestraToken) setStatus('Could not play the whole image. Try again.');
   } finally {
-    if (token === orchestraToken) syncControls();
+    if (token === orchestraToken) { scanning = false; scanLine.hidden = true; syncControls(); }
   }
 }
 
@@ -153,7 +170,7 @@ function applyInstruments() {
 }
 
 canvas.addEventListener('pointerdown', event => {
-  if (!explorer.image || (event.pointerType === 'mouse' && event.button !== 0)) return;
+  if (scanning || !explorer.image || (event.pointerType === 'mouse' && event.button !== 0)) return;
   pointerId = event.pointerId;
   canvas.setPointerCapture(event.pointerId);
   canvas.focus({ preventScroll: true });
@@ -242,6 +259,7 @@ export async function abrirReproductor(record) {
   try {
     await explorer.load(record);
     setStatus('Ready. Enable sound, then drag over the image.');
+    syncControls();
   } catch {
     setStatus('Could not read this image. Close and choose another one.');
   }

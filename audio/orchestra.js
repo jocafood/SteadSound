@@ -20,7 +20,7 @@ export function imageChord(samples, limit = 5, mapper = pixelToAmbient) {
     if (note.silent) continue;
     const key = `${note.midi}:${note.family ?? "ambient"}`;
     const entry = groups.get(key) ?? { ...note, count: 0 };
-    entry.count++;
+    entry.count += sample.count ?? 1;
     groups.set(key, entry);
   }
   return [...groups.values()].sort((a, b) => b.count - a.count || a.midi - b.midi).slice(0, limit);

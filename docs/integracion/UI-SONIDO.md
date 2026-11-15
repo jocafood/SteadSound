@@ -202,3 +202,19 @@ VITE_SOUND_PROFILE=ensemble docker compose up --build -d web
 ```
 
 Los perfiles `ensemble-classic`, `ambient` y `legacy` también siguen disponibles. En la UI actual el indicador se llama **Tempo instrumental**.
+
+## Escáner actual: reproducción de arriba hacia abajo
+
+`ImageSoundExplorer.orchestra()` ejecuta ahora un escáner en el perfil `ensemble`. Lee todos los píxeles, sin saltarse filas ni columnas. Para limitar las voces y evitar miles de ataques por segundo, agrupa filas consecutivas en hasta 32 bandas y cuantiza colores próximos en cada banda antes de seleccionar cinco grupos musicales. Los negros mantienen su posición como silencio.
+
+Las bandas se reproducen en orden vertical, con intervalo `clamp(60/BPM/4, 0.12, 0.32)` segundos. El recorrido completo dura aproximadamente 4–10 segundos para imágenes de al menos 32 filas; las imágenes más bajas usan menos bandas. El tempo sigue dependiendo de la luminosidad media global. Ya no se usa un acorde global repetido durante cuatro segundos.
+
+El controlador emite `scanprogress` con `yStart`, `yEnd` (exclusivo), `height`, `index`, `total`, `progress` y `duration`. La UI final muestra una línea horizontal descendente y las filas que se están leyendo. El botón se deshabilita durante el recorrido; Detener, cerrar, cambiar instrumentos o perder foco cancelan el temporizador y el audio y ocultan la línea.
+
+Rollback exacto al motor previo al escáner:
+
+```bash
+VITE_SOUND_PROFILE=ensemble-static docker compose up --build -d web
+```
+
+Volver al escáner: `VITE_SOUND_PROFILE=ensemble docker compose up --build -d web`.

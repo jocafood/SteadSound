@@ -292,3 +292,4 @@
   position: relative;
   z-index: 1;
 }
+.player-scan-line{position:fixed;height:2px;background:#b9d0ff;box-shadow:0 0 12px #b9d0ff;pointer-events:none;z-index:1000}.player-scan-line[hidden]{display:none}

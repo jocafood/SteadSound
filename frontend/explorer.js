@@ -1,7 +1,8 @@
+import { buildScan } from '../audio/scanner.js';
 import { sampleImage } from '../audio/orchestra.js';
 import { obtenerImagenes } from './api.js';
 import { clientToPixel, samplePixel } from './pixels.js';
-import { iniciarAudio, detenerAudio, reproducirSonido, reproducirOrquesta, configurarImagen } from '../sound.js';
+import { iniciarAudio, detenerAudio, reproducirSonido, reproducirOrquesta, configurarImagen, SOUND_PROFILE } from '../sound.js';
 
 /** Conexión reusable. Emite sample, imagechange y status sin construir UI. */
 export class ImageSoundExplorer extends EventTarget {
@@ -47,7 +48,10 @@ export class ImageSoundExplorer extends EventTarget {
   }
   async orchestra() {
     if (!this.image) throw new Error("Selecciona una imagen primero.");
-    const result = await reproducirOrquesta(sampleImage(this.context, this.image.id));
+    const input = SOUND_PROFILE === 'ensemble' ? buildScan(this.context) : sampleImage(this.context, this.image.id);
+    const result = await reproducirOrquesta(input, progress => {
+      this.dispatchEvent(new CustomEvent('scanprogress', { detail: progress }));
+    });
     return result;
   }
   stop() { detenerAudio(); this.status('Audio detenido.'); }
