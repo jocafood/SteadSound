@@ -1,0 +1,98 @@
+.rocola {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 90%;
+  z-index: 2;
+}
+
+.rocola > img {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+.panel {
+  position: absolute;
+  bottom: 11%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 33%;
+  height: 18%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel > .boton {
+  background-color: #d9d9d9;
+  border: none;
+  color: black;
+  font-size: 1.5rem;
+  cursor: pointer;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 100%;
+}
+
+.boton > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.spotlight {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20%;
+  height: 30%;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+}
+
+.spotlight > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.discos {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  width: 70%;
+  height: 90%;
+  overflow: hidden;
+}
+
+.disco {
+  flex: 0 0 6px;
+  background-color: #333;
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: flex-grow 0.5s ease, flex-basis 0.5s ease;
+}
+
+.disco img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.disco.activo {
+  flex: 1 1 0;
+}
+
+.disco.activo img {
+  opacity: 1;
+}
