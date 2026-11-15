@@ -1,5 +1,7 @@
 # Integración de SteadSound
 
+> Para implementar la UI definitiva, consultar el [contrato completo de integración UI](CONTRATO-UI.md), que consolida API, sonido, Vercel y sustitución del mockup.
+
 Este directorio define el contrato inicial entre la API de Stead, la interfaz de Santiago, la experiencia de Kata y el motor de sonido de Josué y Juan. Las rutas del backend ya están implementadas para un catálogo local curado. El catálogo ya se conecta con el motor de sonido mediante una interfaz sencilla; la UI final puede reutilizar los módulos descritos en UI-SONIDO.md.
 
 ## Decisiones iniciales
