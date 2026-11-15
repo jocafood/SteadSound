@@ -1,0 +1,9 @@
+{
+  "id": "iss-lightning",
+  "title": "Rayos terrestres observados desde la ISS",
+  "description": "Un globo terrestre gris, centrado en América, presenta puntos amarillos concentrados en varias regiones continentales y líneas de referencia geográfica. Es la miniatura para Science On a Sphere de una visualización de rayos detectados por el sensor LIS de la ISS; esta imagen fija no reproduce la evolución temporal del video.",
+  "altText": "Un globo terrestre gris, centrado en América, presenta puntos amarillos concentrados en varias regiones continentales y líneas de referencia geográfica.",
+  "sourceUrl": "https://svs.gsfc.nasa.gov/5011/",
+  "credit": "NASA's Scientific Visualization Studio",
+  "category": "weather"
+}
