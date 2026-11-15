@@ -33,11 +33,52 @@ function encontrarMinimo(RGB) {
     return minimo;
 }
 
-export async function reproducirSonido() {
-    await Tone.start();
 
-    synth.triggerAttackRelease(440, "8n");
+function calcuarDelta(RGB) {
+    let maximo = encontrarMaximo(RGB);
+    let minimo = encontrarMinimo(RGB);
+    let delta = maximo - minimo;
+    return delta;
 }
 
-crearRGB(255, 20, 50);
-RGB = normalizarRGB(RGB);
+async function tono(RGB) {
+
+    await Tone.start();
+
+    RGB = crearRGB(222, 54, 67);
+    RGB = normalizarRGB(RGB);
+
+    let h = await tono(RGB);
+    let frecuencia = convertirHaFrecuencia(h);
+
+    console.log("Hue:", h);
+    console.log("Frecuencia:", frecuencia);
+
+    synth.triggerAttackRelease(frecuencia, "8n");
+}
+
+function convertirHaFrecuencia(h) {
+    let frecuencia = 220 + h/360 * (880 - 220); //si no funca cmabiar a varias octavas
+    return frecuencia;
+}
+
+
+
+function convertirAFrecuencia(h) {
+    let nota = Math.floor(2 + h/360 * 12);
+    let frecuencia = 220*Math.pow(2,nota/12);  
+    return frecuencia;
+}
+
+export async function reproducirSonido() {
+
+    await Tone.start();
+    RGB = crearRGB(255, 255, 0);
+    RGB = normalizarRGB(RGB);
+    let h = tono(RGB);
+    h= convertirFrecuencia(h);
+    let frecuencia = convertirHaFrecuencia(h);
+    synth.triggerAttackRelease(frecuencia, 1);
+}
+
+

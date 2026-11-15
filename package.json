@@ -6,5 +6,11 @@
   },
   "devDependencies": {
     "vite": "^7.0.0"
+  },
+  "dependencies": {
+    "tone": "^15.1.22"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }
