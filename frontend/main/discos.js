@@ -1,7 +1,9 @@
 const contenedor = document.querySelector('.discos');
 const spotlight = document.getElementById('spotlight');
+const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let imagenes = [];
 let activo = 0;
+let primeraVez = true;
 
 async function obtenerImagenes() {
   const response = await fetch('/api/images');
@@ -31,13 +33,49 @@ function montarDiscos() {
   }));
 }
 
+function animarDesdeDisco(img, origen) {
+  const destino = spotlight.getBoundingClientRect();
+  const dx = (origen.left + origen.width / 2) - (destino.left + destino.width / 2);
+  const dy = (origen.top + origen.height / 2) - (destino.top + destino.height / 2);
+  const sx = Math.max(origen.width / destino.width, 0.02);
+  const sy = Math.max(origen.height / destino.height, 0.02);
+
+  img.animate([
+    {
+      transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`,
+      opacity: 0.4,
+      borderRadius: '50%',
+    },
+    {
+      transform: 'translate(0, 0) scale(1, 1)',
+      opacity: 1,
+      borderRadius: '0px',
+    },
+  ], {
+    duration: 600,
+    easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
+  });
+}
+
 function render() {
   if (!imagenes.length) return;
-  contenedor.querySelectorAll('.disco').forEach((disco, i) => {
+
+  const discos = [...contenedor.querySelectorAll('.disco')];
+  // Medir el disco antes de expandirlo: ahí empieza la animación.
+  const origen = discos[activo].getBoundingClientRect();
+
+  discos.forEach((disco, i) => {
     disco.classList.toggle('activo', i === activo);
   });
+
   const imagen = imagenes[activo];
-  spotlight.replaceChildren(crearImg(imagen.imageUrl, imagen.altText));
+  const img = crearImg(imagen.imageUrl, imagen.altText);
+  spotlight.replaceChildren(img);
+
+  if (!primeraVez && !reducirMovimiento) {
+    animarDesdeDisco(img, origen);
+  }
+  primeraVez = false;
 }
 
 document.getElementById('prev').addEventListener('click', () => {
