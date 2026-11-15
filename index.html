@@ -42,7 +42,6 @@
     <button type="button" id="gallery-retry">Reload catalog</button>
     <label><input type="checkbox" id="reduce-motion"> Reduce motion</label>
     <label><input type="checkbox" id="high-contrast"> High contrast</label>
-    <label><input type="checkbox" id="spoken-guidance"> Read descriptions aloud</label>
     <p id="gallery-status" role="status" aria-live="polite"></p>
   </section>
   </main>
@@ -62,14 +61,15 @@
       </header>
 
       <div class="player-stage">
-        <canvas id="player-canvas" tabindex="0" aria-describedby="player-help player-description">Explore the image using the keyboard, or read its description.</canvas>
+        <canvas id="player-canvas" tabindex="0" aria-describedby="player-navigation-help">Explore the image using the keyboard, or read its description.</canvas><span class="sr-only" id="player-navigation-help">Use arrow keys to explore. Repeat instructions reads the full player guide.</span>
       </div>
 
       <footer class="player-dock">
-        <details><summary>Description and instructions</summary><p id="player-description"></p><p id="player-help">Enable sound, then touch or drag. Use the arrow keys to explore with a keyboard; hold Shift for larger steps. Enter or Space plays the current point. Escape closes the player.</p><p>Colors change notes and timbres; dark areas are quieter. Average image brightness sets the tempo. This is an artistic interpretation, not a scientific measurement.</p></details>
+        <details><summary>Description and instructions</summary><p id="player-description"></p><p>Colors change notes and timbres; dark areas are quieter. Average image brightness sets the tempo. This is an artistic interpretation, not a scientific measurement.</p></details>
+        <p id="player-help" class="player-muted">To hear image colors, activate Enable sound first. Use Tab or Shift+Tab to focus the image explorer, then use the arrow keys to navigate. Hold Shift for larger steps; Enter or Space plays the current point. Changing any instrument or combination stops sound: activate Enable sound again before continuing. Escape closes the player.</p>
 
         <label class="volume-field" for="player-volume">Volume <input id="player-volume" type="range" min="0" max="100" value="50" step="5"><output id="player-volume-value" for="player-volume">50 %</output></label>
-        <div class="narration-controls"><button class="pill" id="player-describe" type="button">Read image description</button><button class="pill" id="player-stop-narration" type="button">Stop narration</button><label><input type="checkbox" id="player-contrast"> High contrast</label></div>
+        <div class="narration-controls"><button class="pill" id="player-repeat-instructions" type="button">Repeat instructions</button><button class="pill" id="player-describe" type="button">Read image description</button><button class="pill" id="player-stop-narration" type="button">Stop narration</button><label><input type="checkbox" id="player-contrast"> High contrast</label></div>
         <div class="player-readout">
           <span class="player-swatch" id="player-swatch" aria-hidden="true"></span>
           <p id="player-reading">Select a point on the image.</p>

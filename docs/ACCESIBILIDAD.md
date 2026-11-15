@@ -85,7 +85,7 @@ Se siguieron el [patrón WAI de diálogo modal](https://www.w3.org/WAI/ARIA/apg/
 
 Esta revisión sustituye los controles de región por una presentación más sencilla y añade:
 
-- **Read descriptions aloud**: activa descripciones habladas al abrir o seleccionar una imagen, sin reproducción automática antes de optar por ella.
+- **Voice guidance**: activa descripciones habladas al abrir o seleccionar una imagen, sin reproducción automática antes de optar por ella.
 - **Read image description**: lee explícitamente el título, la descripción y las instrucciones en inglés. Detiene primero la sonificación para que ambas salidas no compitan.
 - **Stop narration**: cancela la voz sin iniciar sonido musical. Abrir reproducción musical, iniciar escaneo, cerrar, ocultar la pestaña o abandonar la página cancela la voz.
 - **High contrast**: fondo negro, texto blanco, controles/enlaces amarillos y foco cian. Los controles de galería y reproductor están sincronizados. No altera el color de la imagen científica ni del píxel leído: cambiar esos colores modificaría la sonificación.
@@ -106,3 +106,37 @@ Resultado final de esta revisión: 16 pruebas JavaScript aprobadas; comprobació
 ## Correcciones de narración para móviles
 
 Se solicita voz al abrir dentro del gesto del usuario, antes de esperar la imagen; se actualizan voces asincrónicas, se fragmentan textos largos, se ignoran callbacks de lecturas canceladas y se informa si no comienza la voz. Ver [detalles y despliegue](DESPLIEGUE-VERCEL.md). Estas medidas no garantizan que un dispositivo sin voz inglesa instalada pueda hablar.
+
+## Guía hablada de los controles
+
+La opción **Voice guidance**, disponible y sincronizada tanto en galería como en reproductor, activa una guía de navegación en inglés. Al activarla explica cómo avanzar con Tab, retroceder con Mayús+Tab y activar controles con Enter. No se activa voz automáticamente sin consentimiento.
+
+`frontend/main/control-guidance.js` describe los controles mediante una tabla de funciones y delegación de eventos. Al recibir foco se anuncia nombre, tipo, función, estado y acción de teclado. Selectores anuncian la opción actual; casillas, si están marcadas; volumen, su porcentaje. Cambios de opción y expansión de instrucciones actualizan el anuncio. La música y el escáner mantienen sus controles y comportamiento.
+
+Las explicaciones también se enlazan con `aria-describedby`, conservando las descripciones anteriores del canvas. Los textos auxiliares están ocultos visualmente y no duplican contenido en la navegación normal. Las miniaturas creadas dinámicamente reciben ayuda después de cargar el catálogo. No se modifica el backend, el catálogo ni sus traducciones.
+
+Se cancela el mensaje anterior al pasar a otro control para evitar colas de instrucciones obsoletas. **Stop narration** cancela el mensaje actual pero no desactiva la guía: el siguiente foco puede volver a hablar. Desmarcar **Voice guidance** desactiva todos los anuncios de controles. El usuario de VoiceOver, TalkBack o NVDA puede dejarla apagada y seguir utilizando los nombres, roles y descripciones accesibles nativos.
+
+La guía por foco no reemplaza los gestos de exploración de un lector móvil: para navegación táctil accesible se recomienda VoiceOver o TalkBack. La voz integrada depende de Web Speech y de las voces inglesas del dispositivo. No se interpreta que una prueba con voz simulada equivalga a una validación auditiva con un lector externo real.
+
+Verificación de guía de controles: 17 pruebas JavaScript aprobadas y compilación correcta. En navegador se comprobaron solicitudes habladas en inglés al enfocar Abrir imagen, contraste, escáner, volumen, instrumento y Cerrar; anuncios de estado de casillas; sincronización de la guía entre galería y diálogo; desactivación sin nuevas locuciones; referencias ARIA; y cero infracciones axe en el estado examinado. Las solicitudes de voz se registraron con una interfaz de síntesis simulada; sigue pendiente escuchar el recorrido con las voces y lectores reales de cada dispositivo.
+
+## Preferencia inicial y lectura explícita de descripciones
+
+Voice guidance inicia activado y ambas casillas aparecen marcadas. Puede desactivarse en cualquiera de las dos vistas. No se fuerza audio durante la carga: los anuncios ocurren al interactuar/enfocar controles y siguen sujetos a la política del navegador.
+
+Seleccionar o abrir una imagen anuncia únicamente el título y una instrucción breve. Enfocar el canvas anuncia su nombre e instrucciones, sin referenciar la descripción científica completa mediante ARIA. La descripción sigue en el panel de texto y solo se solicita su narración completa con **Read image description**. Esto evita repetirla al explorar o enfocar una imagen. La lectura explícita sigue disponible aunque Voice guidance esté desactivado.
+
+## Secuencia explícita para escuchar
+
+Las instrucciones quedan siempre visibles en el reproductor y se referencian desde el canvas. La guía de botones e instrumentos explica: activar **Enable sound**, enfocar **Image explorer** con Tab o Mayús+Tab y usar flechas. Cambiar cualquier instrumento, capa o combinación detiene el sonido; el estado y las descripciones recuerdan activar **Enable sound** de nuevo antes de continuar. No se modifica el foco automáticamente ni se reactiva audio sin una acción del usuario.
+
+## Instrucciones solo una vez y repetición manual
+
+Se retiraron las dos casillas legacy de activación de Voice guidance. La guía breve de controles permanece activa; al enfocar se anuncia solo nombre, tipo y estado/valor. Las explicaciones para lectores externos permanecen enlazadas por ARIA, pero ya no repiten la secuencia larga de Enable sound en cada control.
+
+Las instrucciones completas del reproductor se narran en la primera apertura de la sesión de pestaña. `frontend/main/instructions.js` registra esa presentación en `sessionStorage`, con respaldo en memoria si el navegador bloquea almacenamiento. Reabrir o recargar la misma pestaña no reinicia el tutorial. **Repeat instructions** detiene música y lee el tutorial una única vez por pulsación; no lo vuelve a activar automáticamente. **Read image description** sigue siendo independiente y solo lee la imagen al solicitarla.
+
+## Silencio durante exploración por teclado
+
+Las flechas, Enter y Espacio sobre el canvas cancelan inmediatamente la narración integrada y los anuncios de píxeles pendientes. Mientras el foco permanece en esa exploración, solo se actualiza la lectura visual y la región de anuncios pasa a `aria-live="off"`; las notas instrumentales continúan si el audio está activado. Al salir del canvas se recuperan los anuncios de controles sin leer muestras antiguas. No se desactiva la guía global ni se cambia el volumen de los instrumentos. Un lector externo conserva sus propios ajustes de eco de teclas: la página no puede silenciar el software del usuario.

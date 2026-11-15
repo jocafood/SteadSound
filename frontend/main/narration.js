@@ -1,6 +1,6 @@
 import { splitNarration } from './narration-text.js';
 /** Optional English narration. Keep speak() inside the initiating user gesture. */
-let enabled = false;
+let enabled = true;
 let generation = 0;
 let utterances = [];
 let startTimer;
@@ -13,7 +13,11 @@ export function stopNarration() {
   if (speechSupported()) window.speechSynthesis.cancel();
   utterances = [];
 }
-export function enableNarration(value) { enabled = Boolean(value); if (!enabled) stopNarration(); }
+export function narrationEnabled() { return enabled; }
+export function enableNarration(value) {
+  enabled = Boolean(value);
+  if (!enabled) stopNarration();
+}
 function report(error) { document.dispatchEvent(new CustomEvent('narrationerror', { detail: error })); }
 export function narrate(text, force = false) {
   if ((!enabled && !force) || !text?.trim()) return false;

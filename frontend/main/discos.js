@@ -1,5 +1,6 @@
+import { initializeControlGuidance, refreshControlGuidance } from './control-guidance.js';
 import { localizeImage } from '../i18n/images-en.js';
-import { narrate, enableNarration, speechSupported } from './narration.js';
+import { narrate } from './narration.js';
 import { setHighContrast } from './accessibility.js';
 import { abrirReproductor } from './player.js';
 
@@ -160,6 +161,7 @@ async function iniciar() {
     selector.disabled = !imagenes.length; openButton.disabled = !imagenes.length;
     if (!imagenes.length) galleryStatus.textContent = "The catalog is empty.";
     montarDiscos();
+    refreshControlGuidance();
     render();
   } catch (error) {
     console.error(error);
@@ -167,7 +169,7 @@ async function iniciar() {
   }
 }
 
-selector.addEventListener('change', () => { activo = imagenes.findIndex(image => image.id === selector.value); render(); narrate(`${imagenes[activo].title}. ${imagenes[activo].description}`); });
+selector.addEventListener('change', () => { activo = imagenes.findIndex(image => image.id === selector.value); render(); narrate(`${imagenes[activo].title}. Select Open image to explore it.`); });
 openButton.addEventListener('click', abrirActiva);
 document.getElementById('gallery-retry').addEventListener('click', iniciar);
 const motion = document.getElementById('reduce-motion');
@@ -178,10 +180,4 @@ motion.addEventListener('change', () => {
 });
 iniciar();
 document.getElementById('high-contrast').addEventListener('change', event => setHighContrast(event.target.checked));
-const guidance = document.getElementById('spoken-guidance');
-guidance.disabled = !speechSupported();
-if (!speechSupported()) guidance.closest('label').append(' (not supported by this browser)');
-guidance.addEventListener('change', () => {
-  enableNarration(guidance.checked);
-  if (guidance.checked) narrate('English descriptions enabled. Choose an image and open the player. Use Read image description to listen, or Stop narration to cancel.');
-});
+initializeControlGuidance();

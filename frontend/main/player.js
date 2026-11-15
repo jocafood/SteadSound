@@ -1,3 +1,4 @@
+import { readInstructions } from './instructions.js';
 import { narrate, stopNarration, speechSupported } from './narration.js';
 import { setHighContrast } from './accessibility.js';
 import { containModalFocus, describePixel } from './accessibility.js';
@@ -18,7 +19,7 @@ const root = $('player');
 const canvas = $('player-canvas');
 const explorer = new ImageSoundExplorer(canvas);
 const modalFocus = containModalFocus(root, $('gallery'));
-let announcementTimer, scanQuarter = -1, openToken = 0;
+let announcementTimer, scanQuarter = -1, openToken = 0, keyboardExploring = false;
 const announce = message => { $('player-announcement').textContent = message; };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
@@ -99,7 +100,7 @@ $('player-instruments').hidden = !admiteInstrumentos;
 
 explorer.addEventListener('imagechange', () => {
   $('player-description').textContent = explorer.image.description;
-  canvas.setAttribute('aria-description', explorer.image.altText);
+  canvas.setAttribute('aria-label', `Image explorer: ${explorer.image.title}`);
   const rhythm = explorer.rhythm;
   $('player-tempo').textContent = rhythm
     ? `Tempo ${rhythm.bpm} BPM · Brightness ${Math.round(rhythm.luminance * 100)}% · Vibrance ${Math.round(rhythm.vibrance * 100)}%`
@@ -112,7 +113,7 @@ explorer.addEventListener('sample', ({ detail: { sample, sound } }) => {
   const message = describePixel(sample, sound);
   $('player-reading').textContent = message;
   clearTimeout(announcementTimer);
-  announcementTimer = setTimeout(() => { if (isOpen && !scanning) announce(message); }, 300);
+  if (!keyboardExploring) announcementTimer = setTimeout(() => { if (isOpen && !scanning && !keyboardExploring) announce(message); }, 300);
 });
 
 function syncControls() {
@@ -141,7 +142,7 @@ async function toggleAudio() {
   try {
     ajustarVolumen(Number($("player-volume").value) / 100);
     await explorer.start();
-    if (audioActivo()) setStatus('Sound enabled. Touch or drag over the image, or use the arrow keys.');
+    if (audioActivo()) setStatus('Sound enabled.');
   } catch {
     setStatus('Could not enable sound. Try again.');
   }
@@ -164,7 +165,7 @@ async function playWhole() {
     if (token === orchestraToken) {
       setStatus(result.reason === 'silent'
         ? 'This image is dark: silence.'
-        : 'Scan complete. Enable sound to continue exploring.');
+        : 'Scan complete. Sound is off.');
     }
   } catch {
     if (token === orchestraToken) setStatus('Could not play the image. Try again.');
@@ -186,7 +187,7 @@ function applyInstruments() {
   configurarInstrumentos(selected);
   $('player-layers').hidden = !combine;
   $('player-instrument').disabled = combine;
-  setStatus("Instruments updated. Enable sound to hear them.");
+  setStatus("Instruments updated. Sound is off.");
   syncControls();
 }
 
@@ -212,6 +213,19 @@ for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
   });
 }
 
+function silenceForKeyboardExploration() {
+  keyboardExploring = true;
+  clearTimeout(announcementTimer);
+  stopNarration();
+  $('player-announcement').setAttribute('aria-live', 'off');
+  $('player-announcement').textContent = '';
+}
+canvas.addEventListener('blur', () => {
+  keyboardExploring = false;
+  clearTimeout(announcementTimer);
+  $('player-announcement').textContent = '';
+  $('player-announcement').setAttribute('aria-live', 'polite');
+});
 canvas.addEventListener('keydown', event => {
   const step = event.shiftKey ? 50 : 10;
   const moves = {
@@ -221,10 +235,12 @@ canvas.addEventListener('keydown', event => {
     ArrowDown: [0, step],
   };
   if (moves[event.key]) {
+    silenceForKeyboardExploration();
     event.preventDefault();
     explorer.move(...moves[event.key]);
   }
   if (event.key === 'Enter' || event.key === ' ') {
+    silenceForKeyboardExploration();
     event.preventDefault();
     explorer.move(0, 0);
   }
@@ -257,7 +273,7 @@ export async function abrirReproductor(record) {
   $('player-title').textContent = record.title;
   $('player-credit').textContent = record.credit;
   $('player-source').href = record.sourceUrl;
-  canvas.setAttribute('aria-label', record.altText);
+  canvas.setAttribute('aria-label', `Image explorer: ${record.title}`);
   $('player-reading').textContent = 'Select a point on the image.';
   $('player-tempo').textContent = '';
   $('player-swatch').style.background = '';
@@ -282,13 +298,13 @@ export async function abrirReproductor(record) {
 
   $('player-close').focus({ preventScroll: true });
   // Narrate while opening is still inside the user's click, before image.decode().
-  narrate(`${record.title}. ${record.description}`);
+  if (!readInstructions()) narrate(record.title);
 
   try {
     await explorer.load(record);
     if (!isOpen || opening !== openToken) return;
     root.removeAttribute("aria-busy");
-    setStatus('Image ready. Enable sound and explore using touch, dragging or the arrow keys.');
+    setStatus('Image ready.');
 
     syncControls();
   } catch {
@@ -354,7 +370,7 @@ $('player-describe').addEventListener('click', () => {
   stopPlayback();
   if (current) {
     setStatus('Reading the image description in English.');
-    narrate(`${current.title}. ${current.description}. ${$('player-help').textContent}`, true);
+    narrate(`${current.title}. ${current.description}`, true);
   }
 });
 $('player-stop-narration').addEventListener('click', () => { stopNarration(); setStatus('Narration stopped.'); });
@@ -365,4 +381,10 @@ document.addEventListener('narrationerror', event => {
     : 'Speech is unavailable. Enable an English voice in your device settings, then tap Read image description. The text remains available below.';
   if (isOpen) setStatus(message);
   else $('gallery-status').textContent = message;
+});
+
+$('player-repeat-instructions').disabled = !speechSupported();
+$('player-repeat-instructions').addEventListener('click', () => {
+  stopPlayback();
+  readInstructions({ repeat: true });
 });
