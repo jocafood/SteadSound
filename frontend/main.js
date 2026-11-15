@@ -1,4 +1,4 @@
-import { configurarInstrumentos, admiteInstrumentos, audioActivo } from '../sound.js';
+import { configurarInstrumentos, admiteInstrumentos, audioActivo, SOUND_PROFILE, pausarExploracion, mantenerExploracion } from '../sound.js';
 import './style.css';
 import { ImageSoundExplorer } from './explorer.js';
 
@@ -9,6 +9,8 @@ let records = [], loadingCatalog = false;
 const status = message => { $('status').textContent = message; };
 explorer.addEventListener('status', event => status(event.detail));
 explorer.addEventListener('imagechange', ({ detail: image }) => {
+  const rhythm = explorer.rhythm;
+  $('rhythm').textContent = rhythm ? `Tempo instrumental: ${rhythm.bpm} BPM · Luminosidad ${Math.round(rhythm.luminance * 100)} % · Color vibrante ${Math.round(rhythm.vibrance * 100)} %` : '';
   $('title').textContent = image.title;
   $('description').textContent = image.description;
   $('credit').textContent = image.credit;
@@ -70,9 +72,10 @@ canvas.addEventListener('pointerdown', event => {
   canvas.setPointerCapture(pointer);
   canvas.focus({ preventScroll: true });
   explorer.point(event.clientX, event.clientY);
+  mantenerExploracion();
 });
-canvas.addEventListener('pointermove', event => { if (pointer === event.pointerId) explorer.point(event.clientX, event.clientY); });
-for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, () => { pointer = undefined; });
+canvas.addEventListener('pointermove', event => { if (pointer === event.pointerId) { explorer.point(event.clientX, event.clientY); mantenerExploracion(); } });
+for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, () => { pointer = undefined; pausarExploracion(); });
 canvas.addEventListener('keydown', event => {
   const step = event.shiftKey ? 50 : 10;
   const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
@@ -83,6 +86,10 @@ document.addEventListener('keydown', event => { if (event.key === 'Escape') stop
 window.addEventListener('blur', stop);
 window.addEventListener('pagehide', () => explorer.dispose());
 $('instrument-controls').hidden = !admiteInstrumentos;
+if (!['ensemble', 'ensemble-percussion'].includes(SOUND_PROFILE)) {
+  document.querySelector('#instrument option[value=guitar]').remove();
+  document.querySelector('#layers input[value=guitar]').closest('label').remove();
+}
 function updateInstruments() {
   stop();
   const selected = $('combine').checked

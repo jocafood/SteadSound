@@ -138,3 +138,65 @@ Para regresar a instrumentos y orquesta:
 ```bash
 VITE_SOUND_PROFILE=ensemble docker compose up --build -d web
 ```
+
+## Versión anterior: contraste por color, guitarra y percusión (`ensemble-percussion`)
+
+El perfil `ensemble` ahora conserva la escala musical pero separa los colores en seis familias sonoras (rojo, amarillo, verde, cian, azul y magenta), más una neutra para grises. Cambian el espectro, filtro, ataque y duración; el piano amarillo y magenta usa síntesis FM para contrastar con los tonos más redondos de verdes y azules. Las voces se separan por instrumento y familia para que un cambio de color no altere notas que ya están sonando.
+
+La guitarra eléctrica sintetizada usa distorsión y power chords: fundamental una octava por debajo del píxel, quinta justa y octava. Se puede elegir sola o combinar con piano, violín, flauta y campanas. No se usan grabaciones comerciales.
+
+El volumen del píxel sigue `0.55 × max(R,G,B normalizados)^1.7`, sin un mínimo fijo. Valores máximos menores que 0.07 producen silencio; los grises oscuros que superan ese umbral suenan progresivamente más bajo. El volumen global se normaliza por capas y notas simultáneas.
+
+### Intensidad global y BPM
+
+Al cargar cada imagen se toman 1536 muestras uniformes (48 × 32). Se incluye el fondo negro en los promedios. Esto estima la intensidad visual del archivo de exploración, no una medida física del objeto astronómico.
+
+- Luminosidad: promedio de luminancia relativa sRGB, convirtiendo cada canal a luz lineal y ponderando con 0.2126 R + 0.7152 G + 0.0722 B.
+- Color vibrante: promedio de saturación HSL multiplicada por el canal máximo. Un color casi negro no aumenta el ritmo por tener alta saturación.
+- Energía: `0.65 × sqrt(luminosidad media) + 0.35 × color vibrante medio`.
+- BPM: `round(48 + 96 × energía)`, limitado al intervalo 48–144.
+
+Una imagen más luminosa o más saturada a igual luminosidad produce un BPM mayor. La percusión usa bombo, caja y hi-hat sintetizados. Su intensidad también depende de la energía; en una imagen prácticamente negra se silencia. La UI muestra los BPM y los promedios de la imagen.
+
+La percusión comienza al activar el audio, acompaña la exploración y la orquesta y se detiene con los mismos controles de cancelación. Es global: tocar un píxel negro silencia su nota, pero la percusión continúa si el conjunto de la imagen tiene energía. En orquesta se agrupa por altura y familia sonora, con hasta cinco grupos; con cinco instrumentos y power chords se disparan como máximo 35 voces iniciales.
+
+### Rollback a la entrega anterior con instrumentos
+
+Se conservó `audio/ensemble-classic.js` con el motor anterior (sin guitarra, sin nuevos timbres por familia y sin percusión). Para recuperarlo:
+
+```bash
+VITE_SOUND_PROFILE=ensemble-classic docker compose up --build -d web
+```
+
+Para volver a la versión actual:
+
+```bash
+VITE_SOUND_PROFILE=ensemble docker compose up --build -d web
+```
+
+También siguen disponibles `ambient` y `legacy`. Los botones nuevos de guitarra solo corresponden al perfil actual; no se muestran al compilar el perfil clásico.
+
+## Corrección actual: la luminosidad global marca el tempo de los instrumentos
+
+El perfil actual `ensemble` no tiene batería, bombo, caja ni hi-hat. La luminosidad sigue siendo el promedio de toda la imagen (1536 muestras sRGB linealizadas), incluyendo los fondos negros. No se calcula un BPM distinto para cada píxel. La saturación sigue afectando al timbre pero ya no incrementa los BPM.
+
+`BPM = round(48 + 96 × sqrt(luminancia media))`; intervalo de las notas = `60 / BPM` segundos. Así, imágenes claras producen pulsaciones instrumentales más rápidas y las oscuras más lentas. La duración de cada nota es el 65 % del intervalo, seguida por su envolvente y reverberación.
+
+- Mantener un clic o toque repite el color actual al tempo de la imagen; arrastrar cambia el color. Soltar detiene nuevas repeticiones, dejando extinguir la última nota.
+- Un toque o una muestra por teclado inicia una frase breve, limitada a unos dos pulsos. No se reproduce nada solo por activar el audio.
+- La orquesta repite sus notas simultáneas al mismo tempo global durante cuatro segundos. Detener, Escape, cambiar imagen o cambiar instrumentos cancelan todo.
+- Los negros siguen siendo silenciosos y los píxeles oscuros conservan su volumen reducido. El BPM no cambia el tono ni transpone la nota.
+
+Se conserva la versión inmediatamente anterior para rollback:
+
+```bash
+VITE_SOUND_PROFILE=ensemble-percussion docker compose up --build -d web
+```
+
+Para recuperar la versión actual sin percusión:
+
+```bash
+VITE_SOUND_PROFILE=ensemble docker compose up --build -d web
+```
+
+Los perfiles `ensemble-classic`, `ambient` y `legacy` también siguen disponibles. En la UI actual el indicador se llama **Tempo instrumental**.

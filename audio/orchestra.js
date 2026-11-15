@@ -13,14 +13,15 @@ export function sampleImage(context, imageId, columns = 12, rows = 8) {
   return samples;
 }
 
-export function imageChord(samples, limit = 5) {
+export function imageChord(samples, limit = 5, mapper = pixelToAmbient) {
   const groups = new Map();
   for (const sample of samples) {
-    const note = pixelToAmbient(sample.color);
+    const note = mapper(sample.color);
     if (note.silent) continue;
-    const entry = groups.get(note.midi) ?? { ...note, count: 0 };
+    const key = `${note.midi}:${note.family ?? "ambient"}`;
+    const entry = groups.get(key) ?? { ...note, count: 0 };
     entry.count++;
-    groups.set(note.midi, entry);
+    groups.set(key, entry);
   }
   return [...groups.values()].sort((a, b) => b.count - a.count || a.midi - b.midi).slice(0, limit);
 }

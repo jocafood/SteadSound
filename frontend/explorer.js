@@ -1,7 +1,7 @@
 import { sampleImage } from '../audio/orchestra.js';
 import { obtenerImagenes } from './api.js';
 import { clientToPixel, samplePixel } from './pixels.js';
-import { iniciarAudio, detenerAudio, reproducirSonido, reproducirOrquesta } from '../sound.js';
+import { iniciarAudio, detenerAudio, reproducirSonido, reproducirOrquesta, configurarImagen } from '../sound.js';
 
 /** Conexión reusable. Emite sample, imagechange y status sin construir UI. */
 export class ImageSoundExplorer extends EventTarget {
@@ -31,6 +31,7 @@ export class ImageSoundExplorer extends EventTarget {
       // Fallar aquí si el origen no permite lectura, antes de explorar.
       this.context.getImageData(0, 0, 1, 1);
       this.image = record;
+      this.rhythm = configurarImagen(sampleImage(this.context, record.id, 48, 32));
       this.x = Math.floor((this.canvas.width - 1) / 2);
       this.y = Math.floor((this.canvas.height - 1) / 2);
       this.dispatchEvent(new CustomEvent('imagechange', { detail: record }));
