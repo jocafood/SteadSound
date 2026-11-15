@@ -34,53 +34,40 @@ function encontrarMinimo(RGB) {
 }
 
 
-<<<<<<< HEAD
-function calcuarDelta(RGB) {
+function calcularHue(RGB) {
     let maximo = encontrarMaximo(RGB);
     let minimo = encontrarMinimo(RGB);
-    let delta = maximo - minimo;
-    return delta;
-=======
-    synth.triggerAttackRelease(440, 1);
->>>>>>> a73c109cac5359ed21500f3fcd78d83609c8b1a0
-}
-
-async function tono(RGB) {
-
-    await Tone.start();
-
-    RGB = crearRGB(222, 54, 67);
-    RGB = normalizarRGB(RGB);
-
-    let h = await tono(RGB);
-    let frecuencia = convertirHaFrecuencia(h);
-
-    console.log("Hue:", h);
-    console.log("Frecuencia:", frecuencia);
-
-    synth.triggerAttackRelease(frecuencia, "8n");
+    let delta = maximo-minimo;
+    let h = 0;
+    if (delta == 0) {
+        h = 0;
+    }
+    else if (maximo == RGB.r) {
+        h = 60 * (((RGB.g - RGB.b) / delta) % 6);
+    }
+    else if (maximo == RGB.g) {
+        h = 60 * (((RGB.b - RGB.r) / delta) + 2);
+    }
+    else if (maximo == RGB.b) {
+        h = 60 * (((RGB.r - RGB.g) / delta) + 4);
+    }
+    if (h < 0) {
+        h += 360;
+    }
+    return h;
 }
 
 function convertirHaFrecuencia(h) {
-    let frecuencia = 220 + h/360 * (880 - 220); //si no funca cmabiar a varias octavas
-    return frecuencia;
-}
-
-
-
-function convertirAFrecuencia(h) {
     let nota = Math.floor(2 + h/360 * 12);
     let frecuencia = 220*Math.pow(2,nota/12);  
     return frecuencia;
 }
 
 export async function reproducirSonido() {
-
     await Tone.start();
-    RGB = crearRGB(255, 255, 0);
+    RGB = crearRGB(255, 0, 0);
     RGB = normalizarRGB(RGB);
-    let h = tono(RGB);
-    h= convertirFrecuencia(h);
+    let h = calcularHue(RGB);
     let frecuencia = convertirHaFrecuencia(h);
     synth.triggerAttackRelease(frecuencia, 1);
 }
