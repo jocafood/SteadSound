@@ -30,17 +30,75 @@ El catálogo JSON e imágenes se empaquetan como archivos de solo lectura. No ex
 
 `backend/vercel.json` queda disponible para un despliegue API independiente, pero **no es la configuración que se debe seleccionar para publicar todo**. Para esta entrega no se requieren dos proyectos ni reescrituras con dominios de API.
 
-## Publicar desde GitHub
+## Conectar GitHub con Vercel: paso a paso
 
-1. Subir los cambios al repositorio. Incluir los archivos raíz nuevos, `backend/data`, `frontend`, `audio`, `sound.js`, `index.html`, `package.json` y `package-lock.json`. No subir entornos ni node_modules como parte de cambios nuevos.
-2. En Vercel, seleccionar **Add New → Project** e importar el repositorio.
-3. Dejar **Root Directory en la raíz (`./`)**. No seleccionar `backend` ni `frontend`.
-4. Seleccionar **FastAPI** si no se lee automáticamente el framework de `vercel.json`. El Build Command del archivo es `npm ci && npm run build`. No configurar `dist` como Output Directory manual de un proyecto estático: FastAPI ya monta esa carpeta.
-5. Configurar Node.js 22.x en el proyecto si se requiere escoger versión. Python se toma de `.python-version`.
-6. Opcionalmente añadir `VITE_SOUND_PROFILE=ensemble` para Production y Preview. Sin esa variable, el perfil actual es el predeterminado. No necesita claves NASA ni `API_PROXY_TARGET` en producción.
-7. Pulsar Deploy y revisar logs de instalación, compilación y función. Abrir el dominio HTTPS que devuelve Vercel.
+### 1. Dejar la versión lista en GitHub
 
-No dejar en el panel comandos o ajustes de un proyecto Vite anterior que contradigan `vercel.json`. Si se reutiliza un proyecto existente, revisar Root Directory, Framework y Output Directory. No desactivar protecciones de otras aplicaciones: para compartir pruebas, configurar el acceso del despliegue específico. Un celular sin sesión Vercel debe poder abrir el enlace de prueba; una protección de Preview puede pedir autenticación.
+Guardar y subir a la rama que se quiere publicar todos los cambios de esta entrega. No basta con que funcionen en Docker: Vercel construye la versión del commit remoto, no los archivos sin guardar de la computadora.
+
+Desde la raíz, revisar:
+
+```bash
+git status --short
+git branch --show-current
+```
+
+Comprobar que están incluidos `app.py`, `vercel.json`, `.python-version`, `.vercelignore`, `requirements.txt`, `package.json`, `package-lock.json`, `backend/`, `frontend/`, `audio/`, `sound.js` e `index.html`. Los archivos que empiezan por punto también cuentan. Revisar qué se añadirá antes de crear el commit y hacer push mediante el flujo habitual del equipo. Esta guía no ejecuta esos cambios de Git por sí sola.
+
+No subir `.venv`, claves `.env`, `node_modules` ni `dist` como fuentes nuevas. Vercel instala dependencias y genera la compilación.
+
+### 2. Dar acceso al repositorio
+
+1. Entrar en Vercel y seleccionar el equipo/cuenta donde se alojará SteadSound.
+2. Seleccionar **Add New → Project**.
+3. Conectar GitHub si aún no está conectado y autorizar acceso al repositorio de SteadSound. Si no aparece, revisar los permisos de la integración GitHub para ese repositorio u organización.
+4. Buscar el repositorio y pulsar **Import**. No hace falta crear un repositorio separado para backend o UI.
+
+### 3. Revisar la configuración antes de Deploy
+
+| Campo de Vercel | Valor para este repositorio |
+| --- | --- |
+| Project Name | Por ejemplo `steadsound`; el nombre disponible determina el dominio inicial. |
+| Framework Preset | **FastAPI**, aunque la UI utilice Vite. |
+| Root Directory | Raíz, `./`; dejar vacío si la interfaz representa así la raíz. **No `backend/` ni `frontend/`.** |
+| Build Command | `npm ci && npm run build`, ya declarado en `vercel.json`. |
+| Output Directory | Sin override manual. No forzar un proyecto estático con salida `dist`. La entrada Python monta esa carpeta. |
+| Install Command | Mantener el comportamiento del framework Python. Las dependencias están en el `requirements.txt` raíz; el build instala las de Node con `npm ci`. |
+| Node.js | 22.x si se selecciona manualmente; coincide con el Dockerfile de la UI. |
+| Python | 3.14 mediante `.python-version`. |
+| Production Branch | La rama integrada del equipo; normalmente `main`. Confirmarla después en la configuración Git del proyecto. |
+
+Si Vercel detecta Vite por `package.json`, seleccionar FastAPI y comprobar que se está usando el `vercel.json` de la raíz. `backend/vercel.json` es solo para API independiente y no debe reemplazarlo.
+
+### 4. Variables de entorno
+
+No se necesitan claves NASA, URL de base de datos, credenciales, `localhost` ni dirección externa de API para el catálogo actual.
+
+Opcionalmente agregar:
+
+| Nombre | Valor | Entornos |
+| --- | --- | --- |
+| `VITE_SOUND_PROFILE` | `ensemble` | Production y Preview |
+
+Sin esa variable, `ensemble` ya es el perfil predeterminado. No añadir `API_PROXY_TARGET` para solucionar producción: esa variable solo configura el proxy local de Vite. Las variables `VITE_*` son públicas en el bundle; no colocar secretos en ellas.
+
+### 5. Crear el despliegue
+
+Pulsar **Deploy**. En los logs comprobar instalación de Python, `npm ci`, compilación Vite y creación de la función FastAPI. Cuando finalice correctamente, abrir el dominio HTTPS proporcionado.
+
+No se necesita iniciar `docker compose`, Uvicorn ni Vite en la computadora para que el dominio público responda. Se puede apagar el entorno local y la web publicada debe seguir funcionando.
+
+Si se reutiliza un proyecto existente, revisar que no conserve overrides de Vite o un Root Directory antiguo. Si cambia una variable del perfil de sonido, crear un nuevo despliegue para que se compile con ella.
+
+### 6. Compartir el enlace para celulares
+
+Abrir el dominio de producción desde una ventana privada sin sesión Vercel y después desde el teléfono. Si pide acceso a Vercel, revisar **Deployment Protection** del proyecto/despliegue específico y elegir un enlace que el equipo de prueba pueda abrir. La protección de un preview puede ser diferente de la de producción. No hace falta cambiar protecciones de otros proyectos ni abrir puertos del router.
+
+## Qué ocurre al subir cambios nuevos
+
+Con la integración Git conectada, Vercel puede generar despliegues a partir de nuevos commits. Los cambios de la rama de producción actualizan producción; otras ramas y pull requests pueden generar previews según la configuración del proyecto. Revisar la rama y el commit mostrados en **Deployments** antes de atribuir un comportamiento a la última versión.
+
+Si un cambio rompe la web, usar un despliegue anterior conocido desde Vercel y revisar la opción de rollback/promoción disponible en el panel. Para revertir solo sonido, cambiar `VITE_SOUND_PROFILE` por uno de los perfiles documentados y desplegar de nuevo. El rollback del sonido no revierte HTML o backend.
 
 ## Publicar con CLI (alternativa)
 
@@ -114,3 +172,19 @@ Referencias oficiales: [FastAPI y archivos estáticos en Vercel](https://vercel.
 ## Verificación realizada antes de publicar
 
 17 pruebas JavaScript aprobadas, compilación Docker correcta y prueba local de la entrada raíz `app.py`: portada, catálogo de 20 imágenes, 40 archivos y errores JSON de API. El verificador HTTP también pasó contra la aplicación local completa. La prueba de navegador móvil simulado confirmó inglés, voces tardías, fragmentos cortos, cancelación y solicitudes de voz dentro del gesto. No equivale a escuchar Safari/Android reales ni a ejecutar un build en la infraestructura Vercel: esos pasos siguen pendientes tras publicar.
+
+## Diagnóstico rápido de conexión
+
+| Problema | Qué revisar |
+| --- | --- |
+| Vercel solo muestra la API o Swagger | Root Directory debe ser la raíz, no `backend/`. |
+| Portada 404 o falta `dist` | Logs del build; confirmar `npm ci && npm run build` y ausencia de override de Output Directory. |
+| `/api/images` devuelve HTML | Un fallback/rewrite de UI está interceptando `/api`, o se publicó como Vite en vez de FastAPI. |
+| Error de importación `core` o `backend` | Entrada `app.py` raíz y carpeta backend completa en el commit publicado. |
+| Catálogo o imágenes fallan | `backend/data` en Git y `includeFiles` de `vercel.json`; revisar logs de función. |
+| 401/403 o pantalla de login en el teléfono | Acceso del despliegue y Deployment Protection. |
+| Funciona localmente pero el dominio tiene cambios antiguos | Commit/rama del despliegue y si los cambios realmente se subieron a GitHub. |
+| La voz no comienza | Usar Read image description o Repeat instructions mediante un toque; comprobar voz inglesa y volumen del dispositivo. |
+| No suenan instrumentos después de cambiarlos | Activar Enable sound de nuevo y enfocar la imagen antes de usar flechas. |
+
+Documentación oficial adicional: [conexión de repositorios Git](https://vercel.com/docs/git). Las pantallas del servicio pueden cambiar; los valores técnicos que corresponden a esta configuración están en los archivos raíz del repositorio.

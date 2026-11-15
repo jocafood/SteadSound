@@ -49,3 +49,5 @@ Para incorporar imágenes y sus metadatos, seguir la [guía de incorporación](A
 La conexión del catálogo con canvas y motor Tone.js está disponible: [UI y sonido](UI-SONIDO.md).
 
 Implementación y pruebas de [accesibilidad y lectores de pantalla](../ACCESIBILIDAD.md).
+
+Guía paso a paso de conexión GitHub → Vercel, configuración, dominio público y pruebas móviles: [DESPLIEGUE-VERCEL.md](../DESPLIEGUE-VERCEL.md).
