@@ -36,7 +36,7 @@ function encontrarMinimo(RGB) {
 export async function reproducirSonido() {
     await Tone.start();
 
-    synth.triggerAttackRelease(440, "8n");
+    synth.triggerAttackRelease(440, 1);
 }
 
 crearRGB(255, 20, 50);
