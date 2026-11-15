@@ -2,7 +2,7 @@
 
 Proyecto de sonificación de imágenes NASA para personas ciegas o con baja visión. La API Python entrega imágenes y metadatos; la interfaz y Tone.js realizarán la exploración y el audio en el navegador.
 
-Esta carpeta implementa la parte inicial de Stead: catálogo local curado, metadatos y entrega de archivos PNG, JPG y TIF. Todavía no incluye interfaz ni motor de sonido.
+Esta carpeta implementa la parte inicial de Stead: catálogo local curado, metadatos y entrega de archivos PNG, JPG y TIF. La interfaz sencilla y el motor de sonido están en la raíz del repositorio; ver [UI y sonido](../docs/integracion/UI-SONIDO.md).
 
 ## Ejecutar con Docker (recomendado para el equipo)
 

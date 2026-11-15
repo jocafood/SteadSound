@@ -1,75 +1,40 @@
+import * as Tone from 'tone';
+import { colorToSound } from './frontend/color.js';
 
-import * as Tone from "https://cdn.jsdelivr.net/npm/tone@15.1.22/+esm";
+let synth;
+let enabled = false;
+let generation = 0;
+let lastNote = -Infinity;
 
-const synth = new Tone.Synth().toDestination();
-
-let RGB = crearRGB(255, 2, 0);
-
-function crearRGB(r, g, b) {
-    let RGB = {
-        r: r,
-        g: g,
-        b: b
-    };
-
-    return RGB;
+/** Llamar directamente desde un clic o una tecla del usuario. */
+export async function iniciarAudio() {
+  const current = ++generation;
+  await Tone.start();
+  if (current !== generation) return false;
+  if (!synth) {
+    synth = new Tone.Synth({ volume: -18 }).toDestination();
+  }
+  enabled = true;
+  return true;
 }
 
-function normalizarRGB(RGBNormalizado) {
-    let r = RGBNormalizado.r / 255;
-    let g = RGBNormalizado.g / 255;
-    let b = RGBNormalizado.b / 255;
-
-    return { r, g, b };
+/** Recibe el evento del contrato o directamente {r,g,b}. No usa red. */
+export function reproducirSonido(sample) {
+  const parameters = colorToSound(sample.color ?? sample);
+  if (!enabled) return null;
+  const now = Tone.now();
+  // Evitar ataques simultáneos o una cola de audio al arrastrar rápidamente.
+  if (now - lastNote < 0.08) return parameters;
+  synth.triggerAttackRelease(parameters.frequency, 0.18, now);
+  lastNote = now;
+  return parameters;
 }
 
-function encontrarMaximo(RGB) {
-    let maximo = Math.max(RGB.r, RGB.g, RGB.b);
-    return maximo;
+export function detenerAudio() {
+  generation++;
+  enabled = false;
+  synth?.triggerRelease();
+  lastNote = -Infinity;
 }
 
-function encontrarMinimo(RGB) {
-    let minimo = Math.min(RGB.r, RGB.g, RGB.b);
-    return minimo;
-}
-
-
-function calcularHue(RGB) {
-    let maximo = encontrarMaximo(RGB);
-    let minimo = encontrarMinimo(RGB);
-    let delta = maximo-minimo;
-    let h = 0;
-    if (delta == 0) {
-        h = 0;
-    }
-    else if (maximo == RGB.r) {
-        h = 60 * (((RGB.g - RGB.b) / delta) % 6);
-    }
-    else if (maximo == RGB.g) {
-        h = 60 * (((RGB.b - RGB.r) / delta) + 2);
-    }
-    else if (maximo == RGB.b) {
-        h = 60 * (((RGB.r - RGB.g) / delta) + 4);
-    }
-    if (h < 0) {
-        h += 360;
-    }
-    return h;
-}
-
-function convertirHaFrecuencia(h) {
-    let nota = Math.floor(2 + h/360 * 12);
-    let frecuencia = 220*Math.pow(2,nota/12);  
-    return frecuencia;
-}
-
-export async function reproducirSonido() {
-    await Tone.start();
-    RGB = crearRGB(255, 0, 0);
-    RGB = normalizarRGB(RGB);
-    let h = calcularHue(RGB);
-    let frecuencia = convertirHaFrecuencia(h);
-    synth.triggerAttackRelease(frecuencia, 1);
-}
-
-
+export function audioActivo() { return enabled; }

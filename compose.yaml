@@ -1,0 +1,17 @@
+name: steadsound
+services:
+  api:
+    extends:
+      file: backend/compose.yaml
+      service: api
+    build:
+      context: ./backend
+      target: runtime
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    init: true

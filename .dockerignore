@@ -1,0 +1,12 @@
+.git
+node_modules
+.venv
+**/.venv
+__pycache__
+**/__pycache__
+dist
+Hacka
+docs
+backend
+.pytest_cache
+.env

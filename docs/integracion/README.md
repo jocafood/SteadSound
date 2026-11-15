@@ -1,6 +1,6 @@
 # Integración de SteadSound
 
-Este directorio define el contrato inicial entre la API de Stead, la interfaz de Santiago, la experiencia de Kata y el motor de sonido de Josué y Juan. Las rutas del backend ya están implementadas para un catálogo local curado. La interfaz y el motor de sonido quedan pendientes de integración.
+Este directorio define el contrato inicial entre la API de Stead, la interfaz de Santiago, la experiencia de Kata y el motor de sonido de Josué y Juan. Las rutas del backend ya están implementadas para un catálogo local curado. El catálogo ya se conecta con el motor de sonido mediante una interfaz sencilla; la UI final puede reutilizar los módulos descritos en UI-SONIDO.md.
 
 ## Decisiones iniciales
 
@@ -41,3 +41,5 @@ Los campos obligatorios y sus tipos deben conservarse durante el MVP. Los cambio
 El código, catálogo, pruebas, Dockerfile y configuración Vercel están en [backend](../../backend/README.md). Primero se valida la API local y luego el recorrido imagen → canvas → RGB → sonido con Santiago, Josué y Juan. Después se valida el despliegue conjunto en Vercel. Docker es el entorno compartido de desarrollo, no un cambio obligatorio de hosting.
 
 Para incorporar imágenes y sus metadatos, seguir la [guía de incorporación](AGREGAR-IMAGENES.md).
+
+La conexión del catálogo con canvas y motor Tone.js está disponible: [UI y sonido](UI-SONIDO.md).

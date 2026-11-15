@@ -1,6 +1,6 @@
 # Contrato de datos del MVP
 
-Estado: backend inicial implementado con catálogo local y rutas de exploración y descarga. El contrato con el motor de audio sigue pendiente de integración. Los identificadores, textos y URLs de los ejemplos son ilustrativos; no constituyen un catálogo NASA verificado.
+Estado: backend inicial implementado con catálogo local y rutas de exploración y descarga. La conexión con el motor y una UI sencilla está implementada; ver [UI-SONIDO.md](UI-SONIDO.md). Los identificadores, textos y URLs de los ejemplos son ilustrativos; no constituyen un catálogo NASA verificado.
 
 ## Convenciones
 
@@ -120,7 +120,7 @@ La interfaz decide qué mostrar usando el estado HTTP y `code`; `message` ofrece
 
 ## Interfaz → motor de sonificación
 
-Este objeto se pasa entre módulos JavaScript dentro del navegador. No se envía al backend. La firma concreta del módulo se acordará con Josué y Juan; los datos de entrada propuestos son:
+Este objeto se pasa entre módulos JavaScript dentro del navegador. No se envía al backend. El motor expone `reproducirSonido(sample)` y recibe el siguiente objeto; la implementación y sus controles se documentan en [UI-SONIDO.md](UI-SONIDO.md):
 
 ```json
 {

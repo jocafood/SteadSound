@@ -7,6 +7,14 @@ Proyecto de sonificación de imágenes NASA para personas ciegas o con baja visi
 
 El backend está aislado en `backend/` para facilitar el merge con la interfaz y el motor de sonido. Desde esa carpeta, ejecutar `docker compose up --build` y abrir `http://localhost:8000/api/docs`.
 
+## Probar imagen y sonido juntos
+
+Desde la raíz: `docker compose up --build -d` y abrir `http://localhost:8080`. También se puede ejecutar `npm ci` y `npm run dev` con el backend encendido en el puerto 8000; la interfaz estará en `http://localhost:5173`.
+
+Elegir una imagen, pulsar **Activar audio** y tocar o arrastrar sobre ella. El canvas también se explora con flechas; Escape detiene el sonido.
+
+[Conexiones listas para la UI y guía de integración](docs/integracion/UI-SONIDO.md).
+
 > **Explore the universe through sound.**
 
 ## English
