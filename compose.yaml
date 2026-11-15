@@ -11,7 +11,7 @@ services:
     build:
       context: .
       args:
-        VITE_SOUND_PROFILE: ${VITE_SOUND_PROFILE:-ambient}
+        VITE_SOUND_PROFILE: ${VITE_SOUND_PROFILE:-ensemble}
     ports:
       - "127.0.0.1:${WEB_PORT:-8080}:80"
     depends_on:

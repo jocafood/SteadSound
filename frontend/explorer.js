@@ -1,6 +1,7 @@
+import { sampleImage } from '../audio/orchestra.js';
 import { obtenerImagenes } from './api.js';
 import { clientToPixel, samplePixel } from './pixels.js';
-import { iniciarAudio, detenerAudio, reproducirSonido } from '../sound.js';
+import { iniciarAudio, detenerAudio, reproducirSonido, reproducirOrquesta } from '../sound.js';
 
 /** Conexión reusable. Emite sample, imagechange y status sin construir UI. */
 export class ImageSoundExplorer extends EventTarget {
@@ -42,6 +43,11 @@ export class ImageSoundExplorer extends EventTarget {
   }
   async start() {
     if (await iniciarAudio()) this.status('Audio activado. Toca o arrastra sobre la imagen para escuchar.');
+  }
+  async orchestra() {
+    if (!this.image) throw new Error("Selecciona una imagen primero.");
+    const result = await reproducirOrquesta(sampleImage(this.context, this.image.id));
+    return result;
   }
   stop() { detenerAudio(); this.status('Audio detenido.'); }
   sample(x, y) {

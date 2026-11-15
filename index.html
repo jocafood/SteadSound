@@ -8,6 +8,12 @@
       <label for="images">Imagen del catálogo<select id="images" disabled><option>Cargando catálogo…</option></select></label>
       <div class="buttons"><button id="start" disabled>Activar audio</button><button id="stop" disabled>Detener audio</button><button id="retry">Recargar catálogo</button></div>
     </section>
+    <section id="instrument-controls" class="controls" aria-label="Instrumentos">
+      <label for="instrument">Instrumento<select id="instrument"><option value="piano">Piano suave</option><option value="violin">Violín suave</option><option value="flute">Flauta</option><option value="bell">Campanas</option></select></label>
+      <label class="toggle"><input type="checkbox" id="combine"> Combinar instrumentos</label>
+      <fieldset id="layers" hidden><legend>Instrumentos simultáneos</legend><label><input type="checkbox" value="piano" checked> Piano</label><label><input type="checkbox" value="violin" checked> Violín</label><label><input type="checkbox" value="flute"> Flauta</label><label><input type="checkbox" value="bell"> Campanas</label></fieldset>
+      <button id="orchestra" disabled>Escuchar imagen · 4 segundos</button>
+    </section>
     <p id="status" role="status" aria-live="polite">Conectando con el catálogo…</p>
     <div class="layout">
       <section class="viewer"><canvas id="image" tabindex="0" aria-label="Explorador de imagen" aria-describedby="instructions description">Tu navegador necesita soporte de canvas para explorar.</canvas><p id="instructions">Activa el audio. Toca o mantén presionado y arrastra. Con teclado: flechas para moverte, Mayús + flechas para avanzar más, Enter o Espacio para escuchar y Escape para detener.</p></section>

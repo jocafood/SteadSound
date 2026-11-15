@@ -65,7 +65,7 @@ El canvas debe tener proporción natural y no tener bordes ni padding: el cálcu
 4. Enfocar el canvas y usar flechas (10 píxeles), Mayús + flechas (50), Enter o Espacio para repetir el punto. Escape detiene el audio.
 5. Cambiar de imagen o perder el foco de la ventana detiene el audio. El botón Detener cancela también una activación pendiente.
 
-El perfil predeterminado es ahora `ambient`: escala pentatónica de La menor (A, C, D, E, G), timbre percutido suave y una capa tenue de campana. La luminosidad elige el registro, el tono el grado de la escala y la saturación modifica duración y mezcla. El negro casi absoluto deja silencio. Las notas se espacian al menos 240 ms y una misma altura no se repite antes de 900 ms durante un arrastre. El audio pasa por un filtro, reverberación y limitador. Detener silencia también la cola de reverberación mediante un fundido breve.
+El perfil anterior `ambient` se conserva sin cambios para rollback: escala pentatónica de La menor (A, C, D, E, G), timbre percutido suave y una capa tenue de campana. La luminosidad elige el registro, el tono el grado de la escala y la saturación modifica duración y mezcla. El negro casi absoluto deja silencio. Las notas se espacian al menos 240 ms y una misma altura no se repite antes de 900 ms durante un arrastre. El audio pasa por un filtro, reverberación y limitador. Detener silencia también la cola de reverberación mediante un fundido breve.
 
 El carácter busca calma y melancolía como referencia ambiental de Minecraft; no utiliza sus grabaciones, samples ni melodías. Es síntesis original, no un piano muestreado. No se envían peticiones de red por píxel.
 
@@ -87,7 +87,9 @@ VITE_SOUND_PROFILE=ambient docker compose up --build -d web
 
 En PowerShell, establecer primero `$env:VITE_SOUND_PROFILE="legacy"` (o `"ambient"`) y ejecutar `docker compose up --build -d web`.
 
-Para desarrollo: `VITE_SOUND_PROFILE=legacy npm run dev`. El perfil se incorpora al bundle: cambiar la variable requiere recompilar Docker o reiniciar Vite y recargar la página. No cambia imágenes, metadatos, rutas del backend ni los controles de ejemplo.
+Para desarrollo: `VITE_SOUND_PROFILE=legacy npm run dev`. El perfil predeterminado actual es `ensemble`. Para activarlo: `VITE_SOUND_PROFILE=ensemble docker compose up --build -d web`.
+
+El perfil se incorpora al bundle: cambiar la variable requiere recompilar Docker o reiniciar Vite y recargar la página. No cambia imágenes, metadatos, rutas del backend ni los controles de ejemplo.
 
 ## Verificación
 
@@ -97,3 +99,42 @@ npm run build
 ```
 
 Las pruebas comprueban conversión de color, escalado de coordenadas, bordes, objeto de muestra y errores del cliente de catálogo. Para verificar manualmente: seleccionar imágenes horizontales y verticales, tocar esquinas, arrastrar, usar teclado, detener, cambiar rápidamente de imagen y comprobar un error apagando el backend. La frecuencia visible y los datos de integración ayudan a diagnosticar el recorrido. La calidad y percepción musical requieren escucha humana.
+
+## Instrumentos, mezcla y orquesta (perfil ensemble)
+
+La interfaz conserva el explorador y añade controles de sonido:
+
+- Seleccionar piano, violín, flauta o campanas. Son timbres sintetizados; no grabaciones de instrumentos reales.
+- Activar **Combinar instrumentos** y marcar las capas que deben sonar al mismo tiempo. Se mantiene al menos una seleccionada. Se normaliza el volumen según el número de instrumentos.
+- Pulsar **Escuchar imagen · 4 segundos** para una interpretación simultánea y breve. Se activa el contexto de audio desde ese mismo gesto.
+
+La orquesta toma 96 muestras distribuidas en una cuadrícula de 12 × 8 sobre toda la imagen, omite el negro casi absoluto y agrupa por nota pentatónica. Interpreta simultáneamente las cinco alturas más frecuentes con los instrumentos seleccionados (máximo 20 voces iniciales con cuatro instrumentos). No intenta reproducir cada uno de los millones de píxeles a la vez. La duración total es cuatro segundos, con fundido al final; el modo debe iniciarse de nuevo para otra interpretación.
+
+Mientras suena la orquesta se suspende el disparo de notas por píxel. Detener, Escape, cambiar instrumentos, cambiar imagen o salir de la ventana cancelan la interpretación y su temporizador. Los cambios de instrumento detienen el sonido para evitar mezclar notas anteriores con la nueva selección.
+
+API para la UI final:
+
+```js
+import { configurarInstrumentos, reproducirOrquesta, iniciarAudio } from './sound.js';
+import { sampleImage } from './audio/orchestra.js';
+
+configurarInstrumentos(['piano', 'violin']);
+// Ejecutar la activación desde un gesto del usuario.
+await iniciarAudio();
+const result = await reproducirOrquesta(sampleImage(context, imageId));
+// result.reason: finished, cancelled o silent.
+```
+
+`ImageSoundExplorer.orchestra()` realiza el muestreo del canvas actual y devuelve esa misma promesa. `admiteInstrumentos` indica si el perfil compilado permite los nuevos controles; se ocultan automáticamente en `ambient` y `legacy`.
+
+Para volver exactamente al motor melancólico de la entrega anterior, sin los nuevos controles activos:
+
+```bash
+VITE_SOUND_PROFILE=ambient docker compose up --build -d web
+```
+
+Para regresar a instrumentos y orquesta:
+
+```bash
+VITE_SOUND_PROFILE=ensemble docker compose up --build -d web
+```

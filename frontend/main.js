@@ -1,3 +1,4 @@
+import { configurarInstrumentos, admiteInstrumentos, audioActivo } from '../sound.js';
 import './style.css';
 import { ImageSoundExplorer } from './explorer.js';
 
@@ -15,6 +16,7 @@ explorer.addEventListener('imagechange', ({ detail: image }) => {
   $('source').hidden = false;
   canvas.setAttribute('aria-label', image.altText);
   $('start').disabled = false;
+  $('orchestra').disabled = !admiteInstrumentos;
   $('reading').textContent = 'Selecciona un punto de la imagen.';
   $('payload').textContent = 'Sin muestra todavía.';
 });
@@ -24,7 +26,9 @@ explorer.addEventListener('sample', ({ detail: { sample, sound } }) => {
   $('payload').textContent = JSON.stringify(sample, null, 2);
 });
 async function selectImage() {
+  orchestraRequest++; audioRequest++;
   explorer.stop();
+  $('orchestra').disabled = true;
   $('start').disabled = true;
   $('stop').disabled = true;
   const record = records.find(image => image.id === $('images').value);
@@ -48,7 +52,7 @@ async function loadCatalog() {
 }
 $('images').addEventListener('change', selectImage);
 $('retry').addEventListener('click', loadCatalog);
-let audioRequest = 0;
+let audioRequest = 0, orchestraRequest = 0;
 $('start').addEventListener('click', async () => {
   const request = ++audioRequest;
   $('start').disabled = true;
@@ -57,7 +61,7 @@ $('start').addEventListener('click', async () => {
   catch { status('No se pudo activar el audio. Vuelve a pulsar Activar audio.'); }
   finally { if (request === audioRequest) $('start').disabled = !explorer.image; }
 });
-function stop() { audioRequest++; explorer.stop(); $('start').disabled = !explorer.image; $('stop').disabled = true; }
+function stop() { orchestraRequest++; audioRequest++; explorer.stop(); $('start').disabled = !explorer.image; $('stop').disabled = true; $('orchestra').disabled = !explorer.image || !admiteInstrumentos; }
 $('stop').addEventListener('click', stop);
 let pointer;
 canvas.addEventListener('pointerdown', event => {
@@ -78,4 +82,41 @@ canvas.addEventListener('keydown', event => {
 document.addEventListener('keydown', event => { if (event.key === 'Escape') stop(); });
 window.addEventListener('blur', stop);
 window.addEventListener('pagehide', () => explorer.dispose());
+$('instrument-controls').hidden = !admiteInstrumentos;
+function updateInstruments() {
+  stop();
+  const selected = $('combine').checked
+    ? [...document.querySelectorAll('#layers input:checked')].map(input => input.value)
+    : [$('instrument').value];
+  if (!selected.length) { document.querySelector('#layers input[value=piano]').checked = true; selected.push('piano'); }
+  configurarInstrumentos(selected);
+  $('layers').hidden = !$('combine').checked;
+  $('instrument').disabled = $('combine').checked;
+  $('start').disabled = !explorer.image;
+  $('orchestra').disabled = !explorer.image;
+  status('Instrumentos seleccionados. Activa el audio o escucha la imagen completa.');
+}
+$('instrument').addEventListener('change', updateInstruments);
+$('combine').addEventListener('change', updateInstruments);
+$('layers').addEventListener('change', updateInstruments);
+$('orchestra').addEventListener('click', async () => {
+  const request = ++orchestraRequest;
+  $('orchestra').disabled = true;
+  $('start').disabled = true;
+  $('stop').disabled = false;
+  try {
+    if (!audioActivo()) await explorer.start();
+    if (request !== orchestraRequest || !audioActivo()) return;
+    status('Interpretando una muestra de toda la imagen durante 4 segundos…');
+    const result = await explorer.orchestra();
+    if (request === orchestraRequest) status(result.reason === 'silent' ? 'La imagen muestreada es oscura: silencio.' : 'Interpretación terminada.');
+  } catch (error) { if (request === orchestraRequest) status(error.message); }
+  finally {
+    if (request === orchestraRequest) {
+      $('orchestra').disabled = !explorer.image;
+      $('start').disabled = !explorer.image;
+      $('stop').disabled = !audioActivo();
+    }
+  }
+});
 loadCatalog();
