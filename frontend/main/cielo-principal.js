@@ -34,6 +34,7 @@ function crearConstelaciones() {
 }
 
 function lanzarMeteorito(tipo) {
+  if (document.documentElement.dataset.reduceMotion === "true") return;
   const el = document.createElement('div');
   el.classList.add(tipo === 'cometa' ? 'cometa-principal' : 'meteorito');
   contenedor.appendChild(el);

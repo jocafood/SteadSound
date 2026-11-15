@@ -293,3 +293,28 @@
   z-index: 1;
 }
 .player-scan-line{position:fixed;height:2px;background:#b9d0ff;box-shadow:0 0 12px #b9d0ff;pointer-events:none;z-index:1000}.player-scan-line[hidden]{display:none}
+
+/* Accesibilidad: mantiene la rocola y permite una alternativa de navegación. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.skip-link{position:fixed;left:12px;top:12px;transform:translateY(-160%);z-index:2000;background:#eef2ff;color:#10182d;padding:12px}.skip-link:focus{transform:none}
+.gallery-access{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:min(96%,850px);display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center;padding:10px;border-radius:12px;background:#0c1530;color:#eef2ff;z-index:5;font:0.9rem system-ui}
+.gallery-access select{min-width:0;max-width:100%;flex:1 1 240px}.gallery-access button,.gallery-access select,.region-controls select{font:inherit;min-height:44px;padding:8px;color:#eef2ff;background:#172747;border:1px solid #8393b1;border-radius:8px}.gallery-access p{flex-basis:100%;text-align:center}.gallery-access label{display:flex;gap:8px;align-items:center}
+.disco{border:0;padding:0}.disco:focus-visible,:focus-visible{outline:3px solid #f5d184;outline-offset:4px}
+.player-inner{overflow-y:auto}.player-stage{min-height:180px}.player-stage canvas{max-height:55vh}.player-top p,.player-muted,.player-field,.player-check,.player fieldset{color:#bfcae0}
+.player details p{margin:8px 0}.player details summary{cursor:pointer;min-height:44px;padding:10px 0}.region-controls,.volume-field{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.volume-field input{min-height:44px;min-width:160px}.player select,.player fieldset label,.player-check{min-height:44px}.player input[type=checkbox],.gallery-access input{width:20px;height:20px}
+html[data-reduce-motion=true] *,html[data-reduce-motion=true] *::before,html[data-reduce-motion=true] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+html[data-reduce-motion=true] .cometa,html[data-reduce-motion=true] .cometa-principal,html[data-reduce-motion=true] .meteorito{display:none!important}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(max-width:640px),(max-height:600px){html,body{overflow:auto}.cielo{position:relative;min-height:100vh;display:flex;flex-direction:column}.contenido{position:relative;min-height:420px}.rocola{display:none}.spotlight{top:90px;width:min(85%,350px);height:220px}.panel{bottom:15px;width:90%;height:70px}.gallery-access{position:relative;bottom:auto;left:auto;transform:none;margin:16px auto}.player-inner{display:block;height:100%;padding:16px}.player-top,.player-stage{margin-bottom:16px}.player-stage canvas{max-width:100%;max-height:40vh}.player-dock{padding:12px}.player-footer{overflow-wrap:anywhere}.player-field{flex-wrap:wrap}.player select{max-width:100%}}
+
+.narration-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.narration-controls label{display:flex;gap:8px;align-items:center;min-height:44px}
+html[data-high-contrast=true] body,html[data-high-contrast=true] .cielo,html[data-high-contrast=true] .player{background:#000;color:#fff}
+html[data-high-contrast=true] .gallery-access,html[data-high-contrast=true] .player-dock{background:#000;color:#fff;border:2px solid #fff;backdrop-filter:none}
+html[data-high-contrast=true] .player-muted,html[data-high-contrast=true] .player-top p,html[data-high-contrast=true] .player-field,html[data-high-contrast=true] .player-check,html[data-high-contrast=true] .player fieldset{color:#fff}
+html[data-high-contrast=true] button,html[data-high-contrast=true] select{background:#000!important;color:#ffed00!important;border:2px solid #ffed00!important}
+html[data-high-contrast=true] a,html[data-high-contrast=true] .player-status,html[data-high-contrast=true] summary{color:#ffed00}
+html[data-high-contrast=true] :focus-visible{outline:4px solid #00ffff;outline-offset:4px}
+html[data-high-contrast=true] .estrellas,html[data-high-contrast=true] .player-sky{visibility:hidden}
+html[data-high-contrast=true] input{accent-color:#ffed00}html[data-high-contrast=true] .spotlight{outline:2px solid #fff}
+/* Keep text/background pairs synchronous when switching contrast themes. */
+.pill{transition:opacity 0.2s ease}

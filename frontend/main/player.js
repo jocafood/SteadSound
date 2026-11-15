@@ -1,3 +1,6 @@
+import { narrate, stopNarration, speechSupported } from './narration.js';
+import { setHighContrast } from './accessibility.js';
+import { containModalFocus, describePixel } from './accessibility.js';
 import { ImageSoundExplorer } from '../explorer.js';
 import {
   SOUND_PROFILE,
@@ -6,6 +9,7 @@ import {
   configurarInstrumentos,
   pausarExploracion,
   mantenerExploracion,
+  ajustarVolumen,
 } from '../../sound.js';
 import { iniciarCielo } from './cielo.js';
 
@@ -13,6 +17,9 @@ const $ = id => document.getElementById(id);
 const root = $('player');
 const canvas = $('player-canvas');
 const explorer = new ImageSoundExplorer(canvas);
+const modalFocus = containModalFocus(root, $('gallery'));
+let announcementTimer, scanQuarter = -1, openToken = 0;
+const announce = message => { $('player-announcement').textContent = message; };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const EASE = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 const guitarSupported = SOUND_PROFILE === 'ensemble-static' || SOUND_PROFILE === 'ensemble' || SOUND_PROFILE === 'ensemble-percussion';
@@ -33,15 +40,19 @@ explorer.addEventListener('scanprogress', ({ detail: row }) => {
   scanLine.style.left = `${rect.left}px`;
   scanLine.style.width = `${rect.width}px`;
   scanLine.style.top = `${rect.top + row.progress * rect.height}px`;
-  setStatus(`Scanning rows ${row.yStart + 1}–${row.yEnd} of ${row.height} · ${Math.round(row.progress * 100)}%`);
+  const message = `Scanning rows ${row.yStart + 1} to ${row.yEnd} of ${row.height}. ${Math.round(row.progress * 100)} percent.`;
+  setStatus(message, false);
+  const quarter = Math.floor(row.progress * 4);
+  if (quarter > scanQuarter) { scanQuarter = quarter; announce(`Scan: ${quarter * 25} percent.`); }
 });
 let clipAnimation = null;
 let lastFocus = null;
 
 iniciarCielo($('player-sky'), { estaVisible: () => isOpen });
 
-function setStatus(message) {
+function setStatus(message, speak = true) {
   $('player-status').textContent = message;
+  if (speak) announce(message);
 }
 
 function spotlightRect() {
@@ -87,6 +98,8 @@ if (!guitarSupported) {
 $('player-instruments').hidden = !admiteInstrumentos;
 
 explorer.addEventListener('imagechange', () => {
+  $('player-description').textContent = explorer.image.description;
+  canvas.setAttribute('aria-description', explorer.image.altText);
   const rhythm = explorer.rhythm;
   $('player-tempo').textContent = rhythm
     ? `Tempo ${rhythm.bpm} BPM · Brightness ${Math.round(rhythm.luminance * 100)}% · Vibrance ${Math.round(rhythm.vibrance * 100)}%`
@@ -96,8 +109,10 @@ explorer.addEventListener('imagechange', () => {
 explorer.addEventListener('sample', ({ detail: { sample, sound } }) => {
   const { r, g, b } = sample.color;
   $('player-swatch').style.background = `rgb(${r}, ${g}, ${b})`;
-  const frequency = sound ? ` · ${sound.frequency.toFixed(1)} Hz` : '';
-  $('player-reading').textContent = `Pixel ${sample.position.x}, ${sample.position.y} · RGB ${r}, ${g}, ${b}${frequency}`;
+  const message = describePixel(sample, sound);
+  $('player-reading').textContent = message;
+  clearTimeout(announcementTimer);
+  announcementTimer = setTimeout(() => { if (isOpen && !scanning) announce(message); }, 300);
 });
 
 function syncControls() {
@@ -110,31 +125,37 @@ function syncControls() {
 }
 
 function stopPlayback() {
+  clearTimeout(announcementTimer);
   orchestraToken++; scanning = false; scanLine.hidden = true;
   explorer.stop();
   syncControls();
 }
 
 async function toggleAudio() {
+  stopNarration();
   if (audioActivo()) {
     stopPlayback();
     setStatus('Sound stopped.');
     return;
   }
   try {
+    ajustarVolumen(Number($("player-volume").value) / 100);
     await explorer.start();
-    if (audioActivo()) setStatus('Sound on. Drag over the image to listen.');
+    if (audioActivo()) setStatus('Sound enabled. Touch or drag over the image, or use the arrow keys.');
   } catch {
-    setStatus('Could not start sound. Try again.');
+    setStatus('Could not enable sound. Try again.');
   }
   syncControls();
 }
 
 async function playWhole() {
+  stopNarration();
   if (scanning) return;
   const token = ++orchestraToken;
   scanning = true; syncControls();
   try {
+    ajustarVolumen(Number($('player-volume').value) / 100);
+    scanQuarter = -1;
     if (!audioActivo()) await explorer.start();
     if (token !== orchestraToken || !audioActivo()) return;
     setStatus('Scanning the image from top to bottom…');
@@ -142,11 +163,11 @@ async function playWhole() {
     const result = await explorer.orchestra();
     if (token === orchestraToken) {
       setStatus(result.reason === 'silent'
-        ? 'This image is too dark to sound.'
-        : 'Scan finished. Enable sound to keep exploring.');
+        ? 'This image is dark: silence.'
+        : 'Scan complete. Enable sound to continue exploring.');
     }
   } catch {
-    if (token === orchestraToken) setStatus('Could not play the whole image. Try again.');
+    if (token === orchestraToken) setStatus('Could not play the image. Try again.');
   } finally {
     if (token === orchestraToken) { scanning = false; scanLine.hidden = true; syncControls(); }
   }
@@ -165,7 +186,7 @@ function applyInstruments() {
   configurarInstrumentos(selected);
   $('player-layers').hidden = !combine;
   $('player-instrument').disabled = combine;
-  setStatus(`Instruments: ${selected.join(', ')}.`);
+  setStatus("Instruments updated. Enable sound to hear them.");
   syncControls();
 }
 
@@ -228,7 +249,10 @@ export async function abrirReproductor(record) {
   root.getAnimations({ subtree: true }).forEach(animation => animation.cancel());
   current = record;
   isOpen = true;
+  const opening = ++openToken;
   lastFocus = document.activeElement;
+  modalFocus.open();
+  document.querySelector('.skip-link').inert = true;
 
   $('player-title').textContent = record.title;
   $('player-credit').textContent = record.credit;
@@ -237,11 +261,13 @@ export async function abrirReproductor(record) {
   $('player-reading').textContent = 'Select a point on the image.';
   $('player-tempo').textContent = '';
   $('player-swatch').style.background = '';
-  setStatus('Reading the image…');
+  setStatus('Loading image…');
   root.hidden = false;
+  $('player-description').textContent = record.description;
+  root.setAttribute('aria-busy', 'true');
   syncControls();
 
-  if (!reduceMotion) {
+  if (!reduceMotion && document.documentElement.dataset.reduceMotion !== 'true' && document.documentElement.dataset.highContrast !== 'true') {
     // La vista se expande desde el spotlight.
     clipAnimation?.cancel();
     clipAnimation = root.animate(
@@ -255,23 +281,31 @@ export async function abrirReproductor(record) {
   }
 
   $('player-close').focus({ preventScroll: true });
+  // Narrate while opening is still inside the user's click, before image.decode().
+  narrate(`${record.title}. ${record.description}`);
 
   try {
     await explorer.load(record);
-    setStatus('Ready. Enable sound, then drag over the image.');
+    if (!isOpen || opening !== openToken) return;
+    root.removeAttribute("aria-busy");
+    setStatus('Image ready. Enable sound and explore using touch, dragging or the arrow keys.');
+
     syncControls();
   } catch {
-    setStatus('Could not read this image. Close and choose another one.');
+    if (!isOpen || opening !== openToken) return;
+    root.removeAttribute('aria-busy');
+    setStatus('Could not read this image. Close the player and choose another one.');
   }
 }
 
 export async function cerrarReproductor() {
   if (!isOpen) return;
-  isOpen = false;
+  stopNarration();
+  isOpen = false; openToken++;
   current = null;
   stopPlayback();
 
-  if (!reduceMotion) {
+  if (!reduceMotion && document.documentElement.dataset.reduceMotion !== 'true' && document.documentElement.dataset.highContrast !== 'true') {
     const origen = canvas.getBoundingClientRect();
     const destino = rectDeImagenContenida(spotlightRect());
     const escala = destino.width / origen.width;
@@ -303,5 +337,32 @@ export async function cerrarReproductor() {
   if (isOpen) return;
   root.getAnimations({ subtree: true }).forEach(animation => animation.cancel());
   root.hidden = true;
+  modalFocus.close();
+  document.querySelector('.skip-link').inert = false;
   lastFocus?.focus?.({ preventScroll: true });
 }
+$('player-volume').addEventListener('input', event => {
+  const value = Number(event.target.value);
+  ajustarVolumen(value / 100);
+  $('player-volume-value').textContent = `${value} %`;
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && isOpen) stopPlayback(); });
+
+$('player-describe').disabled = !speechSupported();
+$('player-stop-narration').disabled = !speechSupported();
+$('player-describe').addEventListener('click', () => {
+  stopPlayback();
+  if (current) {
+    setStatus('Reading the image description in English.');
+    narrate(`${current.title}. ${current.description}. ${$('player-help').textContent}`, true);
+  }
+});
+$('player-stop-narration').addEventListener('click', () => { stopNarration(); setStatus('Narration stopped.'); });
+$('player-contrast').addEventListener('change', event => setHighContrast(event.target.checked));
+document.addEventListener('narrationerror', event => {
+  const message = ['not-allowed', 'not-started'].includes(event.detail)
+    ? 'Speech did not start. Tap Read image description again. Check that your device has an English voice.'
+    : 'Speech is unavailable. Enable an English voice in your device settings, then tap Read image description. The text remains available below.';
+  if (isOpen) setStatus(message);
+  else $('gallery-status').textContent = message;
+});

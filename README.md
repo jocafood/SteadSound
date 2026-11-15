@@ -137,3 +137,9 @@ el proyecto invita a descubrir los detalles de las imágenes astronómicas
 no solo con la vista, sino también con el oído.
 
 Para desarrollar la interfaz definitiva: [contrato completo para la UI](docs/integracion/CONTRATO-UI.md).
+
+Implementación y pruebas de [accesibilidad y lectores de pantalla](docs/ACCESIBILIDAD.md).
+
+## Publicación completa en Vercel
+
+UI y backend se despliegan juntos desde la raíz, sin una computadora en localhost. Ver [guía de despliegue](docs/DESPLIEGUE-VERCEL.md). La configuración raíz nueva sustituye la propuesta anterior de dos proyectos; `backend/vercel.json` solo es para API independiente.

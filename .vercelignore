@@ -1,0 +1,15 @@
+.git
+.vercel
+node_modules
+.venv
+**/.venv
+**/__pycache__
+.pytest_cache
+**/.pytest_cache
+Hacka
+docs
+tests
+backend/tests
+.env
+.env.*
+*.log

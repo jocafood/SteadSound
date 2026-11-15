@@ -1,5 +1,7 @@
 # Contrato completo de integración para la UI
 
+> Actualización de despliegue: ya existen archivos raíz para publicar UI y API en **un solo proyecto Vercel**. La propuesta anterior de dos proyectos se conserva como historial, pero debe seguirse [DESPLIEGUE-VERCEL.md](../DESPLIEGUE-VERCEL.md). El despliegue remoto todavía debe ejecutarse y verificarse.
+
 Referencia de entrega para Santiago y el equipo. Describe el código disponible en esta rama y el comportamiento actual del perfil `ensemble`. La integración local está implementada; el despliegue conjunto en Vercel que se describe abajo es una propuesta pendiente de configurar y verificar en la cuenta del equipo. Este documento no elimina el mockup ni publica el proyecto.
 
 ## 1. Arquitectura y responsabilidades

@@ -1,5 +1,11 @@
+import { localizeImage } from '../i18n/images-en.js';
+import { narrate, enableNarration, speechSupported } from './narration.js';
+import { setHighContrast } from './accessibility.js';
 import { abrirReproductor } from './player.js';
 
+const selector = document.getElementById('gallery-select');
+const openButton = document.getElementById('gallery-open');
+const galleryStatus = document.getElementById('gallery-status');
 const contenedor = document.querySelector('.discos');
 const spotlight = document.getElementById('spotlight');
 const botonPrev = document.getElementById('prev');
@@ -11,10 +17,10 @@ let primeraVez = true;
 
 async function obtenerImagenes() {
   const response = await fetch('/api/images');
-  if (!response.ok) throw new Error('No se pudo cargar el catálogo.');
+  if (!response.ok) throw new Error('Could not load the image catalog.');
   const data = await response.json();
-  if (!Array.isArray(data.images)) throw new Error('El catálogo recibido no tiene el formato esperado.');
-  return data.images;
+  if (!Array.isArray(data.images)) throw new Error('The catalog response has an unexpected format.');
+  return data.images.map(localizeImage);
 }
 
 function crearImg(src, alt) {
@@ -26,7 +32,9 @@ function crearImg(src, alt) {
 
 function montarDiscos() {
   contenedor.replaceChildren(...imagenes.map((imagen, i) => {
-    const disco = document.createElement('div');
+    const disco = document.createElement('button');
+    disco.type = 'button';
+    disco.setAttribute('aria-label', `Select ${imagen.title}`);
     disco.classList.add('disco');
     disco.appendChild(crearImg(imagen.imageUrl, ''));
     disco.addEventListener('click', () => {
@@ -69,13 +77,18 @@ function render() {
 
   discos.forEach((disco, i) => {
     disco.classList.toggle('activo', i === activo);
+    disco.setAttribute('aria-pressed', String(i === activo));
+    disco.tabIndex = i === activo ? 0 : -1;
   });
 
   const imagen = imagenes[activo];
+  selector.value = imagen.id;
+  spotlight.setAttribute("aria-label", `Open ${imagen.title}`);
+  galleryStatus.textContent = `${activo + 1} of ${imagenes.length}: ${imagen.title}`;
   const img = crearImg(imagen.imageUrl, imagen.altText);
   spotlight.replaceChildren(img);
 
-  if (!primeraVez && !reducirMovimiento) {
+  if (!primeraVez && !reducirMovimiento && document.documentElement.dataset.reduceMotion !== "true") {
     animarDesdeDisco(img, origen);
   }
   primeraVez = false;
@@ -88,7 +101,7 @@ function cambiar(direccion) {
 }
 
 function bump(boton) {
-  if (reducirMovimiento) return;
+  if (reducirMovimiento || document.documentElement.dataset.reduceMotion === "true") return;
   boton.classList.remove('bump');
   // Forzar un reflow para que la animación se reinicie en clics seguidos.
   void boton.offsetWidth;
@@ -126,18 +139,9 @@ botonNext.addEventListener('click', () => {
   cambiar(1);
 });
 
-for (const boton of [botonPrev, botonNext]) {
-  boton.addEventListener('keydown', event => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      boton.click();
-    }
-  });
-}
-
 // Flechas izquierda y derecha en toda la página, salvo cuando el reproductor está abierto.
 document.addEventListener('keydown', event => {
-  if (document.getElementById('player').hidden === false) return;
+  if (document.getElementById('player').hidden === false || event.target.closest('select, input, textarea, button, a, [contenteditable]')) return;
   if (event.key === 'ArrowLeft') {
     event.preventDefault();
     bump(botonPrev);
@@ -152,12 +156,32 @@ document.addEventListener('keydown', event => {
 async function iniciar() {
   try {
     imagenes = await obtenerImagenes();
+    selector.replaceChildren(...imagenes.map(image => new Option(image.title, image.id)));
+    selector.disabled = !imagenes.length; openButton.disabled = !imagenes.length;
+    if (!imagenes.length) galleryStatus.textContent = "The catalog is empty.";
     montarDiscos();
     render();
   } catch (error) {
     console.error(error);
-    spotlight.textContent = 'No se pudo cargar el catálogo.';
+    galleryStatus.textContent = 'Could not load the catalog. Select Reload catalog to try again.';
   }
 }
 
+selector.addEventListener('change', () => { activo = imagenes.findIndex(image => image.id === selector.value); render(); narrate(`${imagenes[activo].title}. ${imagenes[activo].description}`); });
+openButton.addEventListener('click', abrirActiva);
+document.getElementById('gallery-retry').addEventListener('click', iniciar);
+const motion = document.getElementById('reduce-motion');
+motion.checked = reducirMovimiento;
+motion.addEventListener('change', () => {
+  document.documentElement.dataset.reduceMotion = String(motion.checked);
+  if (motion.checked) document.getAnimations().forEach(animation => animation.cancel());
+});
 iniciar();
+document.getElementById('high-contrast').addEventListener('change', event => setHighContrast(event.target.checked));
+const guidance = document.getElementById('spoken-guidance');
+guidance.disabled = !speechSupported();
+if (!speechSupported()) guidance.closest('label').append(' (not supported by this browser)');
+guidance.addEventListener('change', () => {
+  enableNarration(guidance.checked);
+  if (guidance.checked) narrate('English descriptions enabled. Choose an image and open the player. Use Read image description to listen, or Stop narration to cancel.');
+});

@@ -19,6 +19,7 @@ if (!reducirMovimiento) {
 
   // Ilumina la letra actual y la apaga al terminar su pulso.
   const iluminar = () => {
+  if (document.documentElement.dataset.reduceMotion === "true") { setTimeout(iluminar, 1000); return; }
   const letra = letras[indice];
   letra.classList.add('encendida');
   indice = (indice + 1) % letras.length;

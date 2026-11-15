@@ -1,5 +1,7 @@
 # Integración de SteadSound
 
+> Actualización de despliegue: ya existen archivos raíz para publicar UI y API en **un solo proyecto Vercel**. La propuesta anterior de dos proyectos se conserva como historial, pero debe seguirse [DESPLIEGUE-VERCEL.md](../DESPLIEGUE-VERCEL.md). El despliegue remoto todavía debe ejecutarse y verificarse.
+
 > Para implementar la UI definitiva, consultar el [contrato completo de integración UI](CONTRATO-UI.md), que consolida API, sonido, Vercel y sustitución del mockup.
 
 Este directorio define el contrato inicial entre la API de Stead, la interfaz de Santiago, la experiencia de Kata y el motor de sonido de Josué y Juan. Las rutas del backend ya están implementadas para un catálogo local curado. El catálogo ya se conecta con el motor de sonido mediante una interfaz sencilla; la UI final puede reutilizar los módulos descritos en UI-SONIDO.md.
@@ -45,3 +47,5 @@ El código, catálogo, pruebas, Dockerfile y configuración Vercel están en [ba
 Para incorporar imágenes y sus metadatos, seguir la [guía de incorporación](AGREGAR-IMAGENES.md).
 
 La conexión del catálogo con canvas y motor Tone.js está disponible: [UI y sonido](UI-SONIDO.md).
+
+Implementación y pruebas de [accesibilidad y lectores de pantalla](../ACCESIBILIDAD.md).

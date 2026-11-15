@@ -14,6 +14,7 @@ function crearEstrella(contenedor) {
 }
 
 function lanzarCometa(contenedor) {
+  if (document.documentElement.dataset.reduceMotion === "true") return;
   const cometa = document.createElement('div');
   cometa.classList.add('cometa');
   cometa.style.width = `${120 + Math.random() * 120}px`;
