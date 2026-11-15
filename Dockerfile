@@ -4,6 +4,9 @@ COPY package*.json ./
 RUN npm ci
 COPY index.html sound.js vite.config.mjs ./
 COPY frontend ./frontend
+COPY audio ./audio
+ARG VITE_SOUND_PROFILE=ambient
+ENV VITE_SOUND_PROFILE=$VITE_SOUND_PROFILE
 RUN npm run build
 
 FROM nginx:alpine

@@ -65,9 +65,29 @@ El canvas debe tener proporción natural y no tener bordes ni padding: el cálcu
 4. Enfocar el canvas y usar flechas (10 píxeles), Mayús + flechas (50), Enter o Espacio para repetir el punto. Escape detiene el audio.
 5. Cambiar de imagen o perder el foco de la ventana detiene el audio. El botón Detener cancela también una activación pendiente.
 
-Se mantiene la regla del motor aportado: RGB → tono H → `nota = floor(2 + H / 360 * 12)` → `frecuencia = 220 * 2 ** (nota / 12)`. La frecuencia cambia con el tono del píxel. Los grises tienen H = 0, por lo que comparten nota con el rojo. Saturación, luminosidad, escalas alternativas e instrumentos no están implementados y deben acordarse con el equipo de audio y Kata.
+El perfil predeterminado es ahora `ambient`: escala pentatónica de La menor (A, C, D, E, G), timbre percutido suave y una capa tenue de campana. La luminosidad elige el registro, el tono el grado de la escala y la saturación modifica duración y mezcla. El negro casi absoluto deja silencio. Las notas se espacian al menos 240 ms y una misma altura no se repite antes de 900 ms durante un arrastre. El audio pasa por un filtro, reverberación y limitador. Detener silencia también la cola de reverberación mediante un fundido breve.
 
-Las notas duran 0,18 segundos y se limita el inicio de nuevas notas a una cada 80 ms para evitar ataques simultáneos durante el arrastre. No se envían peticiones de red por píxel.
+El carácter busca calma y melancolía como referencia ambiental de Minecraft; no utiliza sus grabaciones, samples ni melodías. Es síntesis original, no un piano muestreado. No se envían peticiones de red por píxel.
+
+## Rollback del motor de sonido
+
+La UI y su API permanecen iguales. `audio/legacy.js` conserva el motor anterior y `audio/ambient.js` contiene el nuevo. `sound.js` selecciona uno al compilar; el perfil no se cambia desde la UI.
+
+Desde la raíz, para recuperar el sonido anterior en Docker:
+
+```bash
+VITE_SOUND_PROFILE=legacy docker compose up --build -d web
+```
+
+Para restaurar el nuevo perfil:
+
+```bash
+VITE_SOUND_PROFILE=ambient docker compose up --build -d web
+```
+
+En PowerShell, establecer primero `$env:VITE_SOUND_PROFILE="legacy"` (o `"ambient"`) y ejecutar `docker compose up --build -d web`.
+
+Para desarrollo: `VITE_SOUND_PROFILE=legacy npm run dev`. El perfil se incorpora al bundle: cambiar la variable requiere recompilar Docker o reiniciar Vite y recargar la página. No cambia imágenes, metadatos, rutas del backend ni los controles de ejemplo.
 
 ## Verificación
 
