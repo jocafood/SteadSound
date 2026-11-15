@@ -1,5 +1,9 @@
+import { abrirReproductor } from './player.js';
+
 const contenedor = document.querySelector('.discos');
 const spotlight = document.getElementById('spotlight');
+const botonPrev = document.getElementById('prev');
+const botonNext = document.getElementById('next');
 const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let imagenes = [];
 let activo = 0;
@@ -61,7 +65,6 @@ function render() {
   if (!imagenes.length) return;
 
   const discos = [...contenedor.querySelectorAll('.disco')];
-  // Medir el disco antes de expandirlo: ahí empieza la animación.
   const origen = discos[activo].getBoundingClientRect();
 
   discos.forEach((disco, i) => {
@@ -78,16 +81,72 @@ function render() {
   primeraVez = false;
 }
 
-document.getElementById('prev').addEventListener('click', () => {
+function cambiar(direccion) {
   if (!imagenes.length) return;
-  activo = (activo - 1 + imagenes.length) % imagenes.length;
+  activo = (activo + direccion + imagenes.length) % imagenes.length;
   render();
+}
+
+function bump(boton) {
+  if (reducirMovimiento) return;
+  boton.classList.remove('bump');
+  // Forzar un reflow para que la animación se reinicie en clics seguidos.
+  void boton.offsetWidth;
+  boton.classList.add('bump');
+}
+
+function abrirActiva() {
+  if (imagenes.length) abrirReproductor(imagenes[activo]);
+}
+
+spotlight.setAttribute('role', 'button');
+spotlight.setAttribute('aria-label', 'Open image player');
+spotlight.tabIndex = 0;
+spotlight.addEventListener('click', abrirActiva);
+spotlight.addEventListener('keydown', event => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    abrirActiva();
+  }
 });
 
-document.getElementById('next').addEventListener('click', () => {
-  if (!imagenes.length) return;
-  activo = (activo + 1) % imagenes.length;
-  render();
+botonPrev.tabIndex = 0;
+botonNext.tabIndex = 0;
+botonPrev.setAttribute('role', 'button');
+botonNext.setAttribute('role', 'button');
+botonPrev.setAttribute('aria-label', 'Previous image');
+botonNext.setAttribute('aria-label', 'Next image');
+
+botonPrev.addEventListener('click', () => {
+  bump(botonPrev);
+  cambiar(-1);
+});
+botonNext.addEventListener('click', () => {
+  bump(botonNext);
+  cambiar(1);
+});
+
+for (const boton of [botonPrev, botonNext]) {
+  boton.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      boton.click();
+    }
+  });
+}
+
+// Flechas izquierda y derecha en toda la página, salvo cuando el reproductor está abierto.
+document.addEventListener('keydown', event => {
+  if (document.getElementById('player').hidden === false) return;
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    bump(botonPrev);
+    cambiar(-1);
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    bump(botonNext);
+    cambiar(1);
+  }
 });
 
 async function iniciar() {

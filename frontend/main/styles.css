@@ -20,7 +20,6 @@
   transform: translateX(-50%);
   width: 33%;
   height: 18%;
-  background: rgba(0, 0, 0, 0.5);
   z-index: 3;
   display: flex;
   align-items: center;
@@ -95,4 +94,77 @@
 
 .disco.activo img {
   opacity: 1;
+}
+
+
+.panel > .boton {
+  transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.panel > .boton:hover {
+  transform: scale(1.08);
+  background-color: #ffffff;
+  box-shadow: 0 0 12px rgba(185, 208, 255, 0.6);
+}
+
+.panel > .boton:active {
+  transform: scale(0.94);
+}
+
+.panel > .boton:focus-visible {
+  outline: 2px solid #b9d0ff;
+  outline-offset: 3px;
+}
+
+.panel > .boton.bump {
+  animation: bump 0.35s ease;
+}
+
+@keyframes bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18); }
+  70% { transform: scale(0.96); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel > .boton,
+  .panel > .boton.bump {
+    transition: none;
+    animation: none;
+  }
+}
+.titulo {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 300;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #eef2ff;
+  text-shadow: 0 0 12px rgba(185, 208, 255, 0.6), 0 0 32px rgba(120, 150, 255, 0.35);
+  pointer-events: none;
+  user-select: none;
+}
+.titulo .letra {
+  display: inline-block;
+  transition: color 0.6s ease, text-shadow 0.6s ease, transform 0.6s ease;
+}
+
+.titulo .letra.encendida {
+  color: #ffffff;
+  text-shadow: 0 0 14px rgba(185, 208, 255, 0.95), 0 0 36px rgba(120, 150, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titulo .letra {
+    transition: none;
+  }
 }

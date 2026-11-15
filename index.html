@@ -6,37 +6,107 @@
   <title>R2 SteadSound</title>
   <link rel="stylesheet" href="frontend/main/fondo.css">
   <link rel="stylesheet" href="frontend/main/styles.css">
+  <link rel="stylesheet" href="frontend/main/player.css">
 </head>
 
 <body>
   <div class="cielo">
     <div class="estrellas" id="estrellas"></div>
     <div class="contenido">
-        <div class="rocola">
-            <img src="frontend/assets/rocola.png" alt="Jukebox">
+        <h1 class="titulo">SteadSound</h1>
+      <div class="rocola">
+        <img src="frontend/assets/rocola.png" alt="Jukebox">
+      </div>
+      <div class="spotlight" id="spotlight"></div>
+      <div class="panel">
+        <div class="boton" id="prev">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
-        <div class="spotlight" id="spotlight">
-            <img id="spotlight-img" src="" alt="">
-        </div>
-        <div class="panel">
-            <div class="boton" id="prev">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 6L9 12L15 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
 
-            <div class="discos">
-                
-            </div>
+        <div class="discos"></div>
 
-            <div class="boton" id="next">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
+        <div class="boton" id="next">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </div>
+      </div>
+    </div>
   </div>
-  <script src="frontend/main/fondo.js"></script>
-  <script src="frontend/main/discos.js"></script>
+
+  <div class="player" id="player" role="dialog" aria-modal="true" aria-labelledby="player-title" hidden>
+    <div class="player-sky" id="player-sky" aria-hidden="true"></div>
+    <div class="player-inner">
+      <header class="player-top">
+        <div>
+          <h2 id="player-title"></h2>
+          <p id="player-credit"></p>
+        </div>
+        <button class="player-close" id="player-close" type="button" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="player-stage">
+        <canvas id="player-canvas" tabindex="0"></canvas>
+      </div>
+
+      <footer class="player-dock">
+        <div class="player-readout">
+          <span class="player-swatch" id="player-swatch" aria-hidden="true"></span>
+          <p id="player-reading">Select a point on the image.</p>
+          <p id="player-tempo" class="player-muted"></p>
+        </div>
+
+        <div class="player-controls">
+          <button class="pill pill-primary" id="player-audio" type="button" aria-pressed="false">Enable sound</button>
+
+          <div class="player-instruments" id="player-instruments">
+            <label class="player-field">
+              <span>Instrument</span>
+              <select id="player-instrument">
+                <option value="piano">Soft piano</option>
+                <option value="violin">Soft violin</option>
+                <option value="flute">Flute</option>
+                <option value="bell">Bells</option>
+                <option value="guitar">Electric guitar</option>
+              </select>
+            </label>
+
+            <label class="player-check">
+              <input type="checkbox" id="player-combine"> Combine
+            </label>
+
+            <fieldset id="player-layers" hidden>
+              <legend>Layers</legend>
+              <label><input type="checkbox" value="piano" checked> Piano</label>
+              <label><input type="checkbox" value="violin" checked> Violin</label>
+              <label><input type="checkbox" value="flute"> Flute</label>
+              <label><input type="checkbox" value="bell"> Bells</label>
+              <label><input type="checkbox" value="guitar"> Guitar</label>
+            </fieldset>
+
+            <button class="pill" id="player-orchestra" type="button">Play whole image · 4 s</button>
+          </div>
+        </div>
+
+        <p id="player-status" class="player-status" role="status" aria-live="polite"></p>
+
+        <div class="player-footer">
+          <span class="player-muted">Drag over the image · Arrow keys to move · Esc to close</span>
+          <a id="player-source" target="_blank" rel="noopener noreferrer">View NASA source ↗</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script type="module" src="frontend/main/fondo.js"></script>
+  <script type="module" src="frontend/main/discos.js"></script>
+    <script type="module" src="frontend/main/cielo-principal.js"></script>
+      <script type="module" src="frontend/main/titulo.js"></script>
 </body>
 </html>
