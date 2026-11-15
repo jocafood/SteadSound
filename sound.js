@@ -34,11 +34,15 @@ function encontrarMinimo(RGB) {
 }
 
 
+<<<<<<< HEAD
 function calcuarDelta(RGB) {
     let maximo = encontrarMaximo(RGB);
     let minimo = encontrarMinimo(RGB);
     let delta = maximo - minimo;
     return delta;
+=======
+    synth.triggerAttackRelease(440, 1);
+>>>>>>> a73c109cac5359ed21500f3fcd78d83609c8b1a0
 }
 
 async function tono(RGB) {
